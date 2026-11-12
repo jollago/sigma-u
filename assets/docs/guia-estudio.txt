@@ -1,0 +1,11 @@
+SIGMA-U | Recurso de demostración
+Guía breve para organizar una sesión de estudio
+
+1. Define el tema y el objetivo de aprendizaje.
+2. Divide el contenido en partes pequeñas.
+3. Consulta fuentes confiables y toma apuntes.
+4. Resuelve ejercicios o explica el tema con tus palabras.
+5. Comparte dudas concretas con tus compañeros.
+6. Revisa qué comprendiste y qué necesitas reforzar.
+
+Este archivo es un recurso de ejemplo incluido en el prototipo.
