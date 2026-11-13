@@ -9,10 +9,21 @@
  document.getElementById("emailConfirmationOk")?.addEventListener("click",()=>{location.href="login.html";});
  if(!client){say("Falta configurar Supabase. Revisa assets/js/supabase-config.js.");return;}
  document.getElementById("registerForm")?.addEventListener("submit",async e=>{
-  e.preventDefault();const f=e.currentTarget,name=f.elements.fullName.value.trim(),program=f.elements.program.value,campus=f.elements.campus.value,email=f.elements.email.value.trim(),password=f.elements.password.value,confirm=f.elements.confirmPassword.value;
+  e.preventDefault();const f=e.currentTarget,submit=f.querySelector('button[type="submit"]'),name=f.elements.fullName.value.trim(),program=f.elements.program.value,campus=f.elements.campus.value,email=f.elements.email.value.trim(),password=f.elements.password.value,confirm=f.elements.confirmPassword.value;
   if(password!==confirm)return say("Las contraseñas no coinciden.");if(password.length<8)return say("La contraseña debe tener al menos 8 caracteres.");
-  const {data,error}=await client.auth.signUp({email,password,options:{emailRedirectTo:"https://jollago.github.io/confirmar.html",data:{full_name:name,program,campus}}});
-  if(error)return say(error.message);if(data.session){location.href="comunidad.html";}else showConfirmationPanel();
+  if(submit){submit.disabled=true;submit.textContent="Creando cuenta…";}
+  try{
+   const {data,error}=await client.auth.signUp({email,password,options:{emailRedirectTo:"https://jollago.github.io/confirmar.html",data:{full_name:name,program,campus}}});
+   if(error){
+    const detail=(error.message||"").toLowerCase();
+    if(error.status===429||detail.includes("rate limit")||detail.includes("rate_limit")||detail.includes("too many requests")){
+     return say("Supabase alcanzó el límite de correos de confirmación. Espera a que se restablezca el límite o configura un servicio SMTP propio en Supabase para permitir más registros. No necesitas cambiar el código de GitHub Pages.");
+    }
+    return say(error.message);
+   }
+   if(data.session){location.href="comunidad.html";}else showConfirmationPanel();
+  }catch(error){say("No se pudo completar el registro. Comprueba tu conexión e inténtalo más tarde.");}
+  finally{if(submit){submit.disabled=false;submit.textContent="Crear cuenta";}}
  });
  document.getElementById("loginForm")?.addEventListener("submit",async e=>{e.preventDefault();const f=e.currentTarget,{error}=await client.auth.signInWithPassword({email:f.elements.email.value.trim(),password:f.elements.password.value});if(error)return say(error.message);location.href="comunidad.html";});
  document.getElementById("recoverForm")?.addEventListener("submit",async e=>{e.preventDefault();const email=e.currentTarget.elements.email.value.trim(),{error}=await client.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname.replace("recuperar.html","login.html")});if(error)return say(error.message);say("Si el correo está registrado, recibirás instrucciones para restablecer tu contraseña.",true);});
