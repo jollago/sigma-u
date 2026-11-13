@@ -37,3 +37,6 @@
 .actuality-status{color:var(--muted);font-size:.88rem;padding:12px 0}
 .actuality-source{font-size:.78rem;color:var(--muted);margin-top:16px}
 @media(max-width:680px){.actuality-grid{grid-template-columns:1fr}.actuality-card img{height:190px}}
+
+/* Acciones de eliminación propias en la comunidad */
+.delete-action{color:#a33b36;font-size:.78rem;padding:5px 8px}.delete-action:hover{background:#fff0ef;color:#8d211c}
