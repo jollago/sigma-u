@@ -13,6 +13,10 @@
  $("bio").value=p.bio||"";
  $("interests").value=p.interests||"";
  $("email").value=u.email||"";
+ const showSummary=()=>{const full=$("fullName").value||"Estudiante";$("summaryName").textContent=full;$("summaryProgram").textContent=$("program").selectedOptions[0]?.textContent||$("program").value||"Programa no especificado";$("summaryCampus").textContent=$("campus").value?"Sede: "+$("campus").value:"";$("summaryBio").textContent=$("bio").value||"Aún no has agregado una descripción.";$("summaryInterests").textContent=$("interests").value||"Aún no has agregado intereses.";if(p.avatar_url){$("summaryAvatar").src=p.avatar_url;$("summaryAvatar").classList.remove("hidden");}};
+ showSummary();
+ $("editProfileBtn").addEventListener("click",()=>{$("profileSummary").classList.add("hidden");$("profileEditor").classList.remove("hidden");window.scrollTo({top:0,behavior:"smooth"});});
+ $("backProfileBtn").addEventListener("click",()=>{$("profileEditor").classList.add("hidden");$("profileSummary").classList.remove("hidden");showSummary();});
  if(p.avatar_url){$("avatarPreview").src=p.avatar_url;$("avatarPreview").classList.remove("hidden");}
  $("avatarFile").addEventListener("change",()=>{
    const file=$("avatarFile").files[0];if(!file)return;
@@ -32,7 +36,7 @@
      }
      const payload={full_name:$("fullName").value.trim(),program:$("program").value,campus:$("campus").value,semester:$("semester").value,bio:$("bio").value.trim(),interests:$("interests").value.trim(),avatar_url,updated_at:new Date().toISOString()};
      const {error:saveError}=await c.from("profiles").update(payload).eq("id",u.id);
-     if(saveError)throw saveError;say("Perfil actualizado correctamente.",true);
+     if(saveError)throw saveError;p={...p,...payload};showSummary();$("profileEditor").classList.add("hidden");$("profileSummary").classList.remove("hidden");say("Perfil actualizado correctamente.",true);
    }catch(err){say("No se pudo guardar: "+err.message);}
    finally{btn.disabled=false;btn.textContent="Guardar cambios";}
  });
