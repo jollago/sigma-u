@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Confirma tu correo electrónico para activar tu cuenta de SIGMA-U">
+<title>Confirmar correo | SIGMA-U</title>
+<link rel="icon" href="assets/img/sigma-mark.svg">
+<link rel="stylesheet" href="assets/css/styles.css">
+<link rel="stylesheet" href="assets/css/auth.css">
+</head>
+<body>
+<header class="topbar"><div class="container topbar-inner"><a class="brand" href="index.html"><img src="assets/img/sigma-mark.svg" width="34" height="34" alt=""><span>SIGMA-U</span></a></div></header>
+<main class="auth-wrap">
+<section class="auth-card">
+<div class="auth-mark">σ</div>
+<p class="eyebrow">VERIFICACIÓN DE CORREO</p>
+<h1>Activa tu cuenta</h1>
+<p class="muted" id="confirmationText">Pulsa el botón para confirmar tu dirección de correo y activar tu cuenta de SIGMA-U.</p>
+<p id="authMessage" class="auth-message" role="status" aria-live="polite"></p>
+<button class="primary" id="confirmEmailButton" type="button">Confirmar correo</button>
+<a class="soft-btn" id="goLogin" href="login.html" hidden style="margin-top:12px;justify-content:center">Ir a iniciar sesión</a>
+</section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/supabase-config.js"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script>
+(() => {
+ const client=window.sigmaSupabase;
+ const params=new URLSearchParams(location.search);
+ const tokenHash=params.get("token_hash");
+ const type=params.get("type")||"email";
+ const button=document.getElementById("confirmEmailButton");
+ const message=document.getElementById("authMessage");
+ const login=document.getElementById("goLogin");
+ const say=(text,ok=false)=>{message.textContent=text;message.className="auth-message "+(ok?"success":"error");};
+ if(!client){say("No se pudo conectar con el servicio de autenticación. Intenta nuevamente más tarde.");button.disabled=true;return;}
+ if(!tokenHash){
+   const hashParams=new URLSearchParams(location.hash.slice(1));
+   const error=hashParams.get("error_description")||hashParams.get("error");
+   if(error){say("El enlace no pudo validarse o ya fue utilizado. Solicita un nuevo correo de confirmación desde el registro.");}
+   else say("No encontramos el código de confirmación. Abre el enlace completo que llegó a tu correo.");
+   button.disabled=true;
+   document.getElementById("confirmationText").textContent="No se recibió un código de confirmación válido.";
+   return;
+ }
+ button.addEventListener("click",async()=>{
+   button.disabled=true;button.textContent="Verificando...";
+   const {error}=await client.auth.verifyOtp({token_hash:tokenHash,type});
+   if(error){
+     say("No fue posible confirmar el correo. El enlace puede haber vencido o ya se utilizó. Regresa al registro y solicita uno nuevo.");
+     button.disabled=false;button.textContent="Intentar nuevamente";
+     return;
+   }
+   say("¡Correo confirmado! Tu cuenta ya está activada. Ahora puedes iniciar sesión.",true);
+   button.hidden=true;login.hidden=false;
+ });
+})();
+</script>
+</body>
+</html>
