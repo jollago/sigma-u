@@ -25,6 +25,13 @@
   }catch(error){say("No se pudo completar el registro. Comprueba tu conexión e inténtalo más tarde.");}
   finally{if(submit){submit.disabled=false;submit.textContent="Crear cuenta";}}
  });
+ document.getElementById("googleAuthButton")?.addEventListener("click",async e=>{
+  const button=e.currentTarget;button.disabled=true;button.textContent="Conectando con Google…";
+  try{
+   const {error}=await client.auth.signInWithOAuth({provider:"google",options:{redirectTo:"https://jollago.github.io/comunidad.html",queryParams:{prompt:"select_account"}}});
+   if(error){say("No se pudo iniciar con Google: "+error.message);button.disabled=false;button.innerHTML='<span class="google-g" aria-hidden="true">G</span>Continuar con Google';}
+  }catch(error){say("No se pudo conectar con Google. Inténtalo nuevamente.");button.disabled=false;button.innerHTML='<span class="google-g" aria-hidden="true">G</span>Continuar con Google';}
+ });
  document.getElementById("loginForm")?.addEventListener("submit",async e=>{e.preventDefault();const f=e.currentTarget,{error}=await client.auth.signInWithPassword({email:f.elements.email.value.trim(),password:f.elements.password.value});if(error)return say(error.message);location.href="comunidad.html";});
  document.getElementById("recoverForm")?.addEventListener("submit",async e=>{e.preventDefault();const email=e.currentTarget.elements.email.value.trim(),{error}=await client.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname.replace("recuperar.html","login.html")});if(error)return say(error.message);say("Si el correo está registrado, recibirás instrucciones para restablecer tu contraseña.",true);});
 })();
