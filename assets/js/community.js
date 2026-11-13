@@ -22,7 +22,7 @@
     const author=p.profiles?.full_name||"Estudiante", comments=p.comments||[], likes=p.reactions?.length||0;
     const avatar=p.profiles?.avatar_url?'<img src="'+esc(p.profiles.avatar_url)+'" alt="" class="avatar-img">':esc(initials(author));
     const attachments=(p.attachments||[]).map(attachmentMarkup).join("");
-    return '<article class="post" data-id="'+esc(p.id)+'"><div class="post-head"><div class="avatar">'+avatar+'</div><div><div class="post-author">'+esc(author)+'</div><div class="post-meta">'+esc(p.profiles?.program||"Comunidad universitaria")+' · '+esc(time(p.created_at))+'</div></div><span class="post-type">'+esc(p.type)+'</span></div><div class="post-body">'+esc(p.content)+'</div>'+attachments+'<div class="post-actions"><button class="action '+(p.my_reaction?"active":"")+'" data-action="like">♡ Me gusta · '+likes+'</button><button class="action" data-action="comment">▢ Comentar · '+comments.length+'</button><button class="action '+(p.is_saved?"active":"")+'" data-action="save">'+(p.is_saved?"★ Guardado":"☆ Guardar")+'</button></div><div class="comments">'+comments.map(c=>'<div class="comment"><strong>'+esc(c.profiles?.full_name||"Estudiante")+':</strong> '+esc(c.content)+'</div>').join("")+'<form class="comment-form"><input name="comment" placeholder="Escribe un comentario..." aria-label="Escribe un comentario" maxlength="3000" required><button class="soft-btn" type="submit">Enviar</button></form></div></article>';
+    return '<article class="post" data-id="'+esc(p.id)+'"><div class="post-head"><div class="avatar">'+avatar+'</div><div><div class="post-author">'+esc(author)+'</div><div class="post-meta">'+esc(p.profiles?.program||"Comunidad universitaria")+' · '+esc(time(p.created_at))+'</div></div><span class="post-type">'+esc(p.type)+'</span>'+(user&&p.author_id===user.id?'<button class="action delete-action" data-action="delete-post" title="Eliminar mi publicación" aria-label="Eliminar mi publicación">Eliminar</button>':'')+'</div><div class="post-body">'+esc(p.content)+'</div>'+attachments+'<div class="post-actions"><button class="action '+(p.my_reaction?"active":"")+'" data-action="like">♡ Me gusta · '+likes+'</button><button class="action" data-action="comment">▢ Comentar · '+comments.length+'</button><button class="action '+(p.is_saved?"active":"")+'" data-action="save">'+(p.is_saved?"★ Guardado":"☆ Guardar")+'</button></div><div class="comments">'+comments.map(c=>'<div class="comment"><strong>'+esc(c.profiles?.full_name||"Estudiante")+':</strong> '+esc(c.content)+(user&&c.author_id===user.id?' <button class="action delete-action" data-action="delete-comment" data-comment-id="'+esc(c.id)+'" title="Eliminar mi comentario">Eliminar</button>':'')+'</div>').join("")+'<form class="comment-form"><input name="comment" placeholder="Escribe un comentario..." aria-label="Escribe un comentario" maxlength="3000" required><button class="soft-btn" type="submit">Enviar</button></form></div></article>';
   }
   function render(){
     if(!feed)return;
@@ -189,7 +189,24 @@
     const b=e.target.closest("[data-action]");if(!b)return;
     if(!user){location.href="login.html";return;}
     const id=b.closest("[data-id]").dataset.id;let result;
-    if(b.dataset.action==="like"){
+    if(b.dataset.action==="delete-post"){
+      const post=posts.find(p=>p.id===id);
+      if(!post||post.author_id!==user.id){status("Solo puedes eliminar tus propias publicaciones.");return;}
+      if(!confirm("¿Eliminar esta publicación y sus archivos y comentarios? Esta acción no se puede deshacer."))return;
+      b.disabled=true;
+      const paths=(post.attachments||[]).map(a=>a.storage_path).filter(Boolean);
+      if(paths.length){const {error:storageError}=await client.storage.from("community-files").remove(paths);if(storageError){status("No se pudieron eliminar los archivos adjuntos: "+storageError.message);b.disabled=false;return;}}
+      const {error}=await client.from("posts").delete().eq("id",id).eq("author_id",user.id);
+      if(error){status("No se pudo eliminar la publicación: "+error.message);b.disabled=false;return;}
+      status("Publicación eliminada.");await loadPosts();return;
+    }else if(b.dataset.action==="delete-comment"){
+      const commentId=b.dataset.commentId;
+      if(!confirm("¿Eliminar tu comentario?"))return;
+      b.disabled=true;
+      const {error}=await client.from("comments").delete().eq("id",commentId).eq("author_id",user.id);
+      if(error){status("No se pudo eliminar el comentario: "+error.message);b.disabled=false;return;}
+      status("Comentario eliminado.");await loadPosts();return;
+    }else if(b.dataset.action==="like"){
       const exists=posts.find(p=>p.id===id)?.my_reaction;
       result=exists?await client.from("reactions").delete().eq("post_id",id).eq("user_id",user.id):await client.from("reactions").insert({post_id:id,user_id:user.id});
     }else if(b.dataset.action==="save"){
