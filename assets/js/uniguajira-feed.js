@@ -1,63 +1,32 @@
 (() => {
-  const endpoint = "https://vdrosxnfafwkuuniipgf.supabase.co/functions/v1/uniguajira-feed";
-  const grid = document.querySelector("#actualityGrid");
-  const status = document.querySelector("#actualityStatus");
-  const refresh = document.querySelector("#refreshActuality");
-  const filters = [...document.querySelectorAll("[data-filter]")];
-  let items = [];
-  let active = "all";
-  const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, c => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-  }[c]));
-  const safeUrl = value => {
-    try { const u = new URL(value); return u.protocol === "https:" && u.hostname === "uniguajira.edu.co" ? u.href : ""; }
-    catch { return ""; }
-  };
-  function render() {
-    const list = active === "all" ? items : items.filter(item =>
-      active === "news" ? item.type === "Noticia" : item.type === "Evento"
-    );
-    if (!list.length) {
-      grid.innerHTML = '<div class="panel" style="padding:18px">No hay publicaciones disponibles en esta categoría por ahora.</div>';
-      return;
-    }
-    grid.innerHTML = list.map(item => {
-      const url = safeUrl(item.url);
-      if (!url) return "";
-      const image = safeUrl(item.image);
-      return '<article class="actuality-card">' +
-        (image ? '<img src="' + escapeHtml(image) + '" alt="" loading="lazy">' : '') +
-        '<div class="actuality-card-body">' +
-        '<span class="actuality-tag">' + escapeHtml(item.type) + '</span>' +
-        '<h2>' + escapeHtml(item.title) + '</h2>' +
-        (item.date ? '<small class="post-meta">' + escapeHtml(item.date) + '</small>' : '') +
-        (item.summary ? '<p>' + escapeHtml(item.summary) + '</p>' : '') +
-        '<a class="soft-btn" href="' + escapeHtml(url) + '" target="_blank" rel="noopener">Leer en Uniguajira ↗</a>' +
-        '</div></article>';
-    }).join("");
+  // Tarjetas cargadas localmente para no depender del endpoint que responde 403.
+  // Los enlaces llevan a cada publicación original de la Universidad de La Guajira.
+  const items = [
+    {type:"Noticia",title:"Consulta de inscritos a pregrado 2027-1 en Uniguajira",date:"10 de noviembre de 2026",summary:"Los aspirantes pueden verificar el estado de su inscripción en la Plataforma del Proceso de Admisión. El estado «Inscrito» confirma el registro del pago, no la admisión.",url:"https://uniguajira.edu.co/actualidad/consulta-de-inscritos-a-pregrado-2027-1-en-uniguajira-verifica-tu-estado-de-inscripcion/"},
+    {type:"Noticia",title:"Participa en las elecciones para representante de los directores de programa ante el Consejo Académico",date:"10 de noviembre de 2026",summary:"Convocatoria institucional para el periodo 2026-2031.",url:"https://uniguajira.edu.co/actualidad/participa-en-las-elecciones-para-la-seleccion-del-representante-de-los-directores-de-programa-ante-el-consejo-academico-de-uniguajira-periodo-2026-2031/"},
+    {type:"Noticia",title:"Uniguajira fortalece la permanencia estudiantil con subsidios de alimentación",date:"9 de noviembre de 2026",summary:"La iniciativa busca favorecer la permanencia académica en Fonseca, Maicao y Villanueva.",url:"https://uniguajira.edu.co/actualidad/uniguajira-fortalece-la-permanencia-estudiantil-con-subsidios-de-alimentacion-en-fonseca-maicao-y-villanueva/"},
+    {type:"Noticia",title:"Uniguajira proyecta una transformación institucional con misión académica en EAFIT",date:"9 de noviembre de 2026",summary:"Directivos de la universidad participaron en una misión académica para fortalecer la transformación institucional.",url:"https://uniguajira.edu.co/actualidad/uniguajira-proyecta-una-transformacion-institucional-con-mision-academica-de-directivos-en-eafit/"},
+    {type:"Noticia",title:"Grupos focales para la construcción del contexto institucional de Uniguajira",date:"6 de noviembre de 2026",summary:"Invitación a la comunidad universitaria y al sector externo a participar en la construcción del contexto institucional.",url:"https://uniguajira.edu.co/actualidad/grupos-focales-para-la-construccion-del-contexto-institucional-de-uniguajira/"},
+    {type:"Noticia",title:"Más de 70 emprendedores participaron en la Feria Empresarial 2026",date:"6 de noviembre de 2026",summary:"Un espacio para visibilizar la creatividad, la innovación y el talento empresarial de la comunidad.",url:"https://uniguajira.edu.co/actualidad/mas-de-70-emprendedores-participaron-en-la-feria-empresarial-2026-de-uniguajira/"},
+    {type:"Noticia",title:"Reintegros y traslados de sede: solicitudes para el periodo 2027-1",date:"4 de noviembre de 2026",summary:"Información para estudiantes interesados en solicitar reintegro o traslado de sede.",url:"https://uniguajira.edu.co/actualidad/reintegros-y-traslados-de-sede-en-uniguajira-solicitudes-para-el-periodo-2027-1/"},
+    {type:"Noticia",title:"Alianza entre Uniguajira y entidad sueca abre oportunidades para la transición energética",date:"3 de noviembre de 2026",summary:"Una alianza que proyecta nuevas oportunidades para el Caribe en materia de transición energética.",url:"https://uniguajira.edu.co/actualidad/alianza-entre-uniguajira-y-entidad-sueca-abre-nuevas-oportunidades-para-la-transicion-energetica-en-el-caribe/"},
+    {type:"Noticia",title:"Trámite de grado 2027: cargue de documentos",date:"3 de noviembre de 2026",summary:"Orientaciones para estudiantes que aspiran a participar en las ceremonias de grado de 2027.",url:"https://uniguajira.edu.co/actualidad/tramite-de-grado-2027-cargue-de-documentos-para-la-primera-y-segunda-ceremonia/"},
+    {type:"Noticia",title:"Semana Cultural Uniguajira: una historia que nos une",date:"3 de noviembre de 2026",summary:"Del 9 al 13 de noviembre, una semana para celebrar la diversidad, las expresiones artísticas y las tradiciones.",url:"https://uniguajira.edu.co/actualidad/semana-cultural/"},
+    {type:"Evento",title:"Psicofest 2026: celebrando el conocimiento y la salud mental",date:"11 de noviembre de 2026",summary:"Actividad del programa de Psicología en el marco del Día del Psicólogo en Colombia.",url:"https://uniguajira.edu.co/transparencia-y-acceso-a-informacion-publica/eventos/"},
+    {type:"Evento",title:"El poder de administrar: decisiones que crean y transforman",date:"11 de noviembre de 2026",summary:"Encuentro por el Día del Administrador de Empresas 2026.",url:"https://uniguajira.edu.co/transparencia-y-acceso-a-informacion-publica/eventos/"},
+    {type:"Evento",title:"Socialización de experiencias significativas de práctica empresarial",date:"10 de noviembre de 2026",summary:"Espacio académico para compartir aprendizajes y experiencias de práctica empresarial.",url:"https://uniguajira.edu.co/transparencia-y-acceso-a-informacion-publica/eventos/"},
+    {type:"Evento",title:"Taller: Prospectiva estratégica para pequeños empresarios 2026-2",date:"9 de noviembre de 2026",summary:"Actividad orientada al desarrollo de competencias para aplicar la prospectiva estratégica.",url:"https://uniguajira.edu.co/transparencia-y-acceso-a-informacion-publica/eventos/"},
+    {type:"Evento",title:"XII Simposio de investigación: avances, desafíos y horizontes de la gerencia",date:"9 de noviembre de 2026",summary:"Encuentro académico de la Maestría en Gestión y Gerencia Educativa.",url:"https://uniguajira.edu.co/transparencia-y-acceso-a-informacion-publica/eventos/"}
+  ];
+  const grid=document.querySelector("#actualityGrid"),status=document.querySelector("#actualityStatus"),refresh=document.querySelector("#refreshActuality");
+  const filters=[...document.querySelectorAll("[data-filter]")];let active="all";
+  const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  function render(){
+    const list=active==="all"?items:items.filter(x=>active==="news"?x.type==="Noticia":x.type==="Evento");
+    grid.innerHTML=list.map(x=>'<article class="actuality-card"><div class="actuality-card-body"><span class="actuality-tag">'+esc(x.type)+'</span><h2>'+esc(x.title)+'</h2><small class="post-meta">'+esc(x.date)+'</small><p>'+esc(x.summary)+'</p><a class="soft-btn" href="'+esc(x.url)+'" target="_blank" rel="noopener">Leer en Uniguajira ↗</a></div></article>').join("");
+    status.textContent=list.length+" publicaciones institucionales cargadas · Información consultada el 12 de noviembre de 2026.";
   }
-  async function load() {
-    status.textContent = "Consultando noticias y eventos oficiales…";
-    refresh.disabled = true;
-    try {
-      const response = await fetch(endpoint, { headers: { "Accept": "application/json" }, cache: "no-store" });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.detail || data.error || "No se pudo consultar la fuente oficial.");
-      items = Array.isArray(data.items) ? data.items : [];
-      status.textContent = items.length
-        ? items.length + " publicaciones encontradas · Fuente oficial Universidad de La Guajira"
-        : "La fuente oficial respondió, pero no se encontraron publicaciones. Puedes abrir las secciones originales más abajo.";
-      render();
-    } catch (error) {
-      status.textContent = "No fue posible cargar la actualidad automáticamente. Puedes consultar las publicaciones directamente en la web oficial.";
-      grid.innerHTML = '<div class="panel" style="padding:18px;grid-column:1/-1"><p>' + escapeHtml(error.message) + '</p><p><a href="https://uniguajira.edu.co/transparencia-y-acceso-a-informacion-publica/noticias/" target="_blank" rel="noopener">Noticias oficiales</a> · <a href="https://uniguajira.edu.co/transparencia-y-acceso-a-informacion-publica/eventos/" target="_blank" rel="noopener">Eventos oficiales</a></p></div>';
-    } finally { refresh.disabled = false; }
-  }
-  filters.forEach(button => button.addEventListener("click", () => {
-    active = button.dataset.filter;
-    filters.forEach(item => item.classList.toggle("active", item === button));
-    render();
-  }));
-  refresh?.addEventListener("click", load);
-  load();
+  filters.forEach(b=>b.addEventListener("click",()=>{active=b.dataset.filter;filters.forEach(x=>x.classList.toggle("active",x===b));render();}));
+  refresh?.addEventListener("click",()=>{render();status.textContent="Listado local actualizado. Consulta siempre el enlace original para confirmar cambios."});
+  render();
 })();
