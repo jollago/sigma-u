@@ -6,7 +6,7 @@
   const feed=$("#feedList"), form=$("#postForm"), input=$("#postText"), type=$("#postType");
   const search=$("#communitySearch"), filter=$("#feedFilter"), notice=$("#connectionNotice");
   const filesInput=$("#postFiles"), filesLabel=$("#selectedFiles");
-  let user=null, posts=[], savedOnly=false, currentView="Todos";
+  let user=null, posts=[], savedOnly=false, currentView="Todos", activeTag="";
   const initials=n => (n||"Estudiante").split(/\s+/).slice(0,2).map(x=>x[0]||"").join("").toUpperCase();
   const status=t=>{if(notice) notice.textContent=t;};
   const time=s=>{const d=new Date(s);return isNaN(d)?"":d.toLocaleString("es-CO",{dateStyle:"medium",timeStyle:"short"});};
@@ -18,6 +18,20 @@
     if(mime.startsWith("video/")) return '<video class="post-media-video" controls preload="metadata"><source src="'+esc(url)+'" type="'+esc(mime)+'">Tu navegador no puede reproducir este video.</video>';
     return '<a class="post-attachment" href="'+esc(url)+'" target="_blank" rel="noopener" download><span class="file-icon">'+esc((name.split(".").pop()||"FILE").slice(0,5).toUpperCase())+'</span><span><strong>'+name+'</strong><small class="post-meta">'+esc(fileSize(a.size_bytes||0))+' · Abrir o descargar</small></span><span class="attachment-download">↓</span></a>';
   }
+  function contentMarkup(value){
+    const safe=esc(value);
+    return safe.replace(new RegExp("(^|\\s)(#[\\p{L}\\p{N}_]+)","gu"),(all,space,tag)=>space+'<a href="#" class="post-hashtag" data-tag="'+tag.toLowerCase()+'">'+tag+'</a>');
+  }
+  function updateTrending(){
+    const host=$("#trendingTags");if(!host)return;
+    const counts=new Map();
+    posts.forEach(p=>{
+      const tags=String(p.content||"").match(new RegExp("#[\\p{L}\\p{N}_]+","gu"))||[];
+      new Set(tags.map(t=>t.toLowerCase())).forEach(t=>counts.set(t,(counts.get(t)||0)+1));
+    });
+    const top=[...counts.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],"es")).slice(0,8);
+    host.innerHTML=top.length?top.map(([tag,count])=>'<button class="trend-tag '+(activeTag===tag?"active":"")+'" data-tag="'+esc(tag)+'"><b>'+esc(tag)+'</b><small>'+count+(count===1?" publicación":" publicaciones")+'</small></button>').join(""):'<p class="muted trend-empty">Aún no hay hashtags. Usa #Tema en tus publicaciones.</p>';
+  }
   function card(p){
     const author=p.profiles?.full_name||"Estudiante", comments=p.comments||[], likes=p.reactions?.length||0;
     const avatar=p.profiles?.avatar_url?'<img src="'+esc(p.profiles.avatar_url)+'" alt="" class="avatar-img">':esc(initials(author));
@@ -27,7 +41,7 @@
   function render(){
     if(!feed)return;
     const q=(search?.value||"").trim().toLowerCase(), f=filter?.value||"Todos", fileF=$("#fileFilter")?.value||"Todos";
-    let list=posts.filter(p=>(f==="Todos"||p.type===f)&&(!savedOnly||p.is_saved));
+    let list=posts.filter(p=>(f==="Todos"||p.type===f)&&(!savedOnly||p.is_saved)&&(!activeTag||String(p.content||"").toLowerCase().includes(activeTag)));
     list=list.filter(p=>{
       const names=(p.attachments||[]).map(a=>a.file_name).join(" ");
       const text=[p.content,p.profiles?.full_name,p.profiles?.program,p.type,names].join(" ").toLowerCase();
@@ -109,18 +123,18 @@
       is_saved:saved.has(p.id),
       my_reaction:liked.has(p.id)
     }));
-    render();status("Conectado · "+posts.length+" publicaciones cargadas.");
+    updateTrending();render();status("Conectado · "+posts.length+" publicaciones cargadas.");
   }
   async function account(){
     if(!ready){$("#accountActions").innerHTML='<a class="soft-btn" href="login.html">Iniciar sesión</a><a class="primary" href="registro.html">Crear cuenta</a>';return;}
     const {data}=await client.auth.getSession(); user=data.session?.user||null;
     if(user){
       const {data:p}=await client.from("profiles").select("full_name,program,avatar_url").eq("id",user.id).maybeSingle();
-      const name=p?.full_name||user.user_metadata?.full_name||user.email;
+      const name=p?.full_name||user.user_metadata?.full_name||"Mi cuenta";
       $("#profileName").textContent=name;$("#profileProgram").textContent=p?.program||"Estudiante SIGMA-U";
       $("#profileAvatar").innerHTML=p?.avatar_url?'<img class="avatar-img" src="'+esc(p.avatar_url)+'" alt="">':esc(initials(name));
       $("#composerAvatar").textContent=initials(name);
-      $("#accountActions").innerHTML='<span class="account-email">'+esc(user.email)+'</span><button class="soft-btn" id="logoutBtn">Cerrar sesión</button>';
+      $("#accountActions").innerHTML='<a class="account-name" href="perfil.html" title="Ir a mi perfil">'+esc(name)+'</a><button class="soft-btn" id="logoutBtn">Cerrar sesión</button>';
       $("#logoutBtn").onclick=async()=>{await client.auth.signOut();location.href="login.html";};
       input.placeholder="¿Qué quieres compartir hoy?";
       form.querySelector('button[type="submit"]').disabled=false;
@@ -178,7 +192,7 @@
         if(rowError)throw rowError;
       }
       input.value="";if(filesInput)filesInput.value="";if(filesLabel)filesLabel.textContent="Puedes adjuntar hasta 6 archivos.";
-      filter.value="Todos";savedOnly=false;currentView="Todos";await loadPosts();status("¡Publicación compartida correctamente!");
+      if(filter)filter.value="Todos";if(search)search.value="";savedOnly=false;activeTag="";setView("Todos");await loadPosts();window.scrollTo({top:0,behavior:"smooth"});
     }catch(err){
       if(uploaded.length)await client.storage.from("community-files").remove(uploaded);
       if(postId)await client.from("posts").delete().eq("id",postId);
@@ -224,17 +238,19 @@
     if(error){status("No se pudo comentar: "+error.message);return;}await loadPosts();
   });
   function setView(view){
-    currentView=view;savedOnly=view==="Guardados";
+    currentView=view;savedOnly=view==="Guardados";activeTag="";
     if(filter)filter.value=["Pregunta","Recurso"].includes(view)?view:"Todos";
     $("#savedLink")?.classList.toggle("active",savedOnly);
     document.querySelectorAll(".side-nav .nav-link").forEach(a=>a.classList.toggle("active",a.dataset.view===view));
-    render();
+    updateTrending();render();
   }
   document.querySelectorAll(".side-nav [data-view]").forEach(a=>a.addEventListener("click",e=>{
     e.preventDefault();const view=a.dataset.view;setView(view);
     if(view==="Explorar")search?.focus();
   }));
   search?.addEventListener("input",render);filter?.addEventListener("change",render);$("#fileFilter")?.addEventListener("change",render);
+  $("#trendingTags")?.addEventListener("click",e=>{const b=e.target.closest("[data-tag]");if(!b)return;e.preventDefault();activeTag=b.dataset.tag.toLowerCase();savedOnly=false;if(filter)filter.value="Todos";if(search)search.value="";currentView="Explorar";document.querySelectorAll(".side-nav .nav-link").forEach(a=>a.classList.toggle("active",a.dataset.view==="Explorar"));updateTrending();render();});
+  feed?.addEventListener("click",e=>{const a=e.target.closest(".post-hashtag");if(!a)return;e.preventDefault();activeTag=a.dataset.tag.toLowerCase();savedOnly=false;if(filter)filter.value="Todos";if(search)search.value="";updateTrending();render();});
   $("#savedLink")?.addEventListener("click",e=>{e.preventDefault();if(!user){location.href="login.html";return;}setView(savedOnly?"Todos":"Guardados");});
   (async()=>{await account();await loadPosts();if(ready)client.auth.onAuthStateChange(()=>{account().then(loadPosts);});})();
 })();
