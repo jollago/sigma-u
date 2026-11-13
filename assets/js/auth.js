@@ -28,7 +28,7 @@
  document.getElementById("googleAuthButton")?.addEventListener("click",async e=>{
   const button=e.currentTarget;button.disabled=true;button.textContent="Conectando con Google…";
   try{
-   const {error}=await client.auth.signInWithOAuth({provider:"google",options:{redirectTo:"https://jollago.github.io/comunidad.html",queryParams:{prompt:"select_account"}}});
+   const {error}=await client.auth.signInWithOAuth({provider:"google",options:{redirectTo:"https://jollago.github.io/index.html",queryParams:{prompt:"select_account"}}});
    if(error){say("No se pudo iniciar con Google: "+error.message);button.disabled=false;button.innerHTML='<span class="google-g" aria-hidden="true">G</span>Continuar con Google';}
   }catch(error){say("No se pudo conectar con Google. Inténtalo nuevamente.");button.disabled=false;button.innerHTML='<span class="google-g" aria-hidden="true">G</span>Continuar con Google';}
  });
