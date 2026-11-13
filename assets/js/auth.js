@@ -11,7 +11,7 @@
  document.getElementById("registerForm")?.addEventListener("submit",async e=>{
   e.preventDefault();const f=e.currentTarget,name=f.elements.fullName.value.trim(),program=f.elements.program.value,campus=f.elements.campus.value,email=f.elements.email.value.trim(),password=f.elements.password.value,confirm=f.elements.confirmPassword.value;
   if(password!==confirm)return say("Las contraseñas no coinciden.");if(password.length<8)return say("La contraseña debe tener al menos 8 caracteres.");
-  const {data,error}=await client.auth.signUp({email,password,options:{data:{full_name:name,program,campus}}});
+  const {data,error}=await client.auth.signUp({email,password,options:{emailRedirectTo:"https://jollago.github.io/confirmar.html",data:{full_name:name,program,campus}}});
   if(error)return say(error.message);if(data.session){location.href="comunidad.html";}else showConfirmationPanel();
  });
  document.getElementById("loginForm")?.addEventListener("submit",async e=>{e.preventDefault();const f=e.currentTarget,{error}=await client.auth.signInWithPassword({email:f.elements.email.value.trim(),password:f.elements.password.value});if(error)return say(error.message);location.href="comunidad.html";});
