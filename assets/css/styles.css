@@ -40,3 +40,18 @@
 
 /* Acciones de eliminación propias en la comunidad */
 .delete-action{color:#a33b36;font-size:.78rem;padding:5px 8px}.delete-action:hover{background:#fff0ef;color:#8d211c}
+
+
+/* Hashtags, tendencias y perfil editable */
+.account-name{color:var(--green);font-weight:750;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.trend-tag{display:flex;width:100%;justify-content:space-between;align-items:center;gap:10px;padding:10px 8px;border:0;border-bottom:1px solid #f0f2f0;background:transparent;text-align:left;cursor:pointer;color:var(--green);border-radius:8px}
+.trend-tag:hover,.trend-tag.active{background:var(--green2)}
+.trend-tag small{color:var(--muted);white-space:nowrap}
+.trend-empty{font-size:.84rem;line-height:1.45}
+.post-hashtag{color:var(--green);font-weight:750;text-decoration:none}
+.post-hashtag:hover{text-decoration:underline}
+.profile-editor-head{margin-bottom:12px}
+.profile-editor-head .soft-btn{margin-bottom:12px}
+#profileSummary h2{margin:8px 0}
+#summaryBio{white-space:pre-wrap;margin:16px 0}
+@media(max-width:680px){.account-name{max-width:105px;font-size:.86rem}}
