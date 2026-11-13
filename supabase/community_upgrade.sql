@@ -6,6 +6,9 @@ create policy "profiles_insert_own" on public.profiles
 for insert to authenticated
 with check (auth.uid() = id);
 
+-- El trigger puede ejecutar esta función; no debe exponerse como RPC pública.
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
+
 alter table public.profiles add column if not exists campus text;
 alter table public.profiles add column if not exists semester text;
 alter table public.profiles add column if not exists bio text;
