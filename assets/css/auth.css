@@ -3,3 +3,11 @@
 
 /* Panel de confirmación de correo al finalizar el registro */
 .auth-modal[hidden]{display:none!important}.auth-modal{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:20px}.auth-modal-backdrop{position:absolute;inset:0;background:rgba(15,30,20,.58);backdrop-filter:blur(3px)}.auth-modal-card{position:relative;width:min(100%,440px);padding:32px;border-radius:22px;background:#fff;box-shadow:0 24px 80px rgba(0,0,0,.22);text-align:center;animation:authModalIn .18s ease-out}.auth-modal-icon{width:62px;height:62px;display:grid;place-items:center;margin:0 auto 18px;border-radius:20px;background:#e6f2e9;color:#17643a;font-size:30px}.auth-modal-card h2{margin:8px 0 12px;font-size:1.55rem;color:#20372a}.auth-modal-card p{line-height:1.6;color:#526258}.auth-modal-card .eyebrow{color:#28764a}.auth-modal-note{font-size:.82rem!important;color:#718078!important;margin:14px 0 22px}.auth-modal-card .primary{width:100%;justify-content:center;padding:13px;font-size:1rem}.auth-modal-open{overflow:hidden}@keyframes authModalIn{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}@media(max-width:480px){.auth-modal-card{padding:26px 21px}}
+
+/* Acceso con Google */
+.oauth-separator{display:flex;align-items:center;gap:12px;margin:19px 0 13px;color:#829087;font-size:.8rem}
+.oauth-separator:before,.oauth-separator:after{content:"";height:1px;flex:1;background:#e4ebe5}
+.google-btn{width:100%;min-height:46px;display:flex;align-items:center;justify-content:center;gap:11px;border:1px solid #d9e1db;border-radius:10px;background:#fff;color:#263b2d;font:600 .94rem inherit;cursor:pointer;transition:background .15s,border-color .15s}
+.google-btn:hover{background:#f8faf8;border-color:#aebdb2}
+.google-btn:disabled{opacity:.65;cursor:wait}
+.google-g{width:21px;height:21px;display:grid;place-items:center;border:1px solid #e2e7e3;border-radius:50%;font:bold 14px Arial,sans-serif;color:#4285f4;background:#fff}
