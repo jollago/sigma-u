@@ -1,5 +1,5 @@
 (async()=>{
- const c=window.sigmaSupabase, m=document.getElementById("authMessage"), say=(t,ok=false)=>{m.textContent=t;m.className="auth-message "+(ok?"success":"error");};
+ const c=window.sigmaSupabase,m=document.getElementById("authMessage"),say=(t,ok=false)=>{m.textContent=t;m.className="auth-message "+(ok?"success":"error");};
  if(!c){say("Configura Supabase primero.");return;}
  const {data:{user:u},error:userError}=await c.auth.getUser();
  if(userError||!u){location.href="login.html";return;}
@@ -7,8 +7,8 @@
  const {data:p,error}=await c.from("profiles").select("*").eq("id",u.id).single();
  if(error){say("No se pudo cargar el perfil: "+error.message);return;}
  $("fullName").value=p.full_name||u.user_metadata?.full_name||"";
- $("program").dataset.current=p.program||"";
- $("campus").dataset.current=p.campus||"";
+ $("program").value=p.program||u.user_metadata?.program||"";
+ $("campus").value=p.campus||u.user_metadata?.campus||"";
  $("semester").value=p.semester||"";
  $("bio").value=p.bio||"";
  $("interests").value=p.interests||"";
