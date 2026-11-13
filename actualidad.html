@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Noticias y eventos oficiales de la Universidad de La Guajira en SIGMA-U.">
+  <title>Actualidad Uniguajira | SIGMA-U</title>
+  <link rel="icon" href="assets/img/sigma-mark.svg">
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+<header class="topbar"><div class="container topbar-inner">
+  <a class="brand" href="index.html"><img src="assets/img/sigma-mark.svg" width="34" height="34" alt=""><span>SIGMA-U</span></a>
+  <div class="top-actions"><a class="soft-btn" href="comunidad.html">Volver a la comunidad</a></div>
+</div></header>
+<nav class="academic-nav"><div class="container">
+  <a href="index.html">Inicio</a><a href="comunidad.html">Comunidad</a><a href="actualidad.html" aria-current="page">Actualidad universitaria</a>
+  <a href="problema.html">Problema</a><a href="innovacion.html">Innovación</a><a href="sistema.html">Sistema</a>
+</div></nav>
+<main class="container" style="padding:30px 0 44px">
+  <section class="actuality-intro">
+    <div class="eyebrow">Información institucional</div>
+    <h1 class="section-title">Actualidad Uniguajira</h1>
+    <p class="muted">Noticias y eventos publicados en el sitio oficial de la Universidad de La Guajira. Consulta cada publicación en su fuente original.</p>
+  </section>
+  <div class="actuality-toolbar">
+    <div class="actuality-filters" role="group" aria-label="Filtrar actualidad">
+      <button class="actuality-filter active" type="button" data-filter="all">Todo</button>
+      <button class="actuality-filter" type="button" data-filter="news">Noticias</button>
+      <button class="actuality-filter" type="button" data-filter="events">Eventos</button>
+    </div>
+    <button class="soft-btn" id="refreshActuality" type="button">↻ Actualizar</button>
+  </div>
+  <div id="actualityStatus" class="actuality-status" role="status">Consultando el sitio oficial de Uniguajira…</div>
+  <section id="actualityGrid" class="actuality-grid" aria-live="polite"></section>
+  <p class="actuality-source">Fuente: <a href="https://uniguajira.edu.co/" target="_blank" rel="noopener">Universidad de La Guajira</a>. El contenido y sus derechos pertenecen a la institución.</p>
+</main>
+<footer class="footer"><div class="container">SIGMA-U · Conecta. Comparte. Aprende. <span style="float:right">© <span id="year"></span> Proyecto académico</span></div></footer>
+<script src="assets/js/main.js"></script>
+<script src="assets/js/uniguajira-feed.js"></script>
+</body>
+</html>
