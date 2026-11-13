@@ -31,7 +31,7 @@ En Supabase abre **Authentication > URL Configuration**:
 
 La recuperación de contraseña utiliza el flujo de correo de Supabase. Revisa también las plantillas de correo y los límites de envío del proyecto.
 
-## 4. Probar en local
+## 4. Ampliar la base de datos para Comunidad y perfiles\n1. En Supabase abre **SQL Editor > New query**.\n2. Abre `supabase/community_upgrade.sql`, copia todo y ejecútalo. Esta migración agrega los campos del perfil académico, la tabla de adjuntos, el bucket `community-files` y sus políticas de almacenamiento. No borra las tablas ni publicaciones existentes.\n3. Ejecuta esta migración después de `schema.sql`. No es necesario volver a ejecutar el esquema inicial.\n\n## 5. Probar en local
 No abras los archivos con `file://`. Desde la carpeta del proyecto ejecuta:
 
 ```bash
@@ -40,7 +40,7 @@ python -m http.server 8000
 
 Abre `http://localhost:8000`. Regístrate con un correo al que tengas acceso, confirma el correo si la verificación está activa e inicia sesión. Prueba crear una publicación, comentar, reaccionar, guardar y editar el perfil.
 
-## 5. Publicar en GitHub Pages
+## 6. Publicar en GitHub Pages
 1. Sube todos los archivos y carpetas de `SIGMA-U` a la raíz de tu repositorio.
 2. En GitHub entra a **Settings > Pages**.
 3. En **Build and deployment**, elige **Deploy from a branch**.
@@ -60,7 +60,7 @@ Abre `http://localhost:8000`. Regístrate con un correo al que tengas acceso, co
 ## Importante: qué está y qué no está implementado
 - La conexión real se activa después de ejecutar el SQL y configurar el Project URL y la clave pública.
 - Si Supabase no está configurado, la comunidad muestra publicaciones de demostración; no las guarda como datos compartidos.
-- La versión actual no incluye carga de archivos, chat en tiempo real ni un sistema completo de notificaciones. La tabla `notifications` queda preparada para una ampliación posterior.
+- Los archivos se almacenan en el bucket público `community-files`; no subas documentos privados, sensibles o con datos personales. Límite configurado: 100 MB por archivo.
 - Los posts de demostración no se insertan automáticamente en PostgreSQL.
 - GitHub Pages solo aloja archivos estáticos; Supabase proporciona autenticación y base de datos.
 
