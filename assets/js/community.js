@@ -144,8 +144,31 @@
     const submit=form.querySelector('button[type="submit"]');submit.disabled=true;submit.textContent="Publicando…";
     let postId=null, uploaded=[];
     try{
-      const {data:post,error}=await client.from("posts").insert({author_id:user.id,type:type.value,content:content||"Archivo compartido por la comunidad."}).select("id").single();
-      if(error)throw error;postId=post.id;
+      const {data:authResult,error:authError}=await client.auth.getUser();
+      if(authError)throw new Error("No se pudo validar la sesión: "+authError.message);
+      const currentUser=authResult.user;
+      if(!currentUser)throw new Error("La sesión expiró. Cierra sesión e inicia nuevamente.");
+
+      const {data:profile,error:profileReadError}=await client
+        .from("profiles").select("id").eq("id",currentUser.id).maybeSingle();
+      if(profileReadError)throw new Error("No se pudo verificar tu perfil: "+profileReadError.message+" ["+(profileReadError.code||"sin código")+"]");
+      if(!profile){
+        const metadata=currentUser.user_metadata||{};
+        const {error:profileInsertError}=await client.from("profiles").insert({
+          id:currentUser.id,
+          full_name:metadata.full_name||currentUser.email||"Estudiante",
+          program:metadata.program||null
+        });
+        if(profileInsertError)throw new Error("No se pudo crear tu perfil: "+profileInsertError.message+" ["+(profileInsertError.code||"sin código")+"]");
+      }
+
+      const {data:post,error}=await client.from("posts").insert({
+        author_id:currentUser.id,
+        type:type.value,
+        content:content||"Archivo compartido por la comunidad."
+      }).select("id").single();
+      if(error)throw new Error("Supabase rechazó la publicación: "+error.message+" ["+(error.code||"sin código")+"]"+(error.details?" Detalles: "+error.details:"")+(error.hint?" Ayuda: "+error.hint:""));
+      postId=post.id;
       for(const file of chosen){
         const safe=file.name.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9._-]/g,"_");
         const path=user.id+"/"+Date.now()+"-"+Math.random().toString(36).slice(2,8)+"-"+safe;
