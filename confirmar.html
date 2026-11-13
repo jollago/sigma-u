@@ -67,8 +67,7 @@
      if(error){button.disabled=false;button.textContent="Intentar nuevamente";showExpired("Supabase no aceptó el enlace. Puede haber vencido o ya haber sido utilizado.");return;}
      showSuccess();
    });
-   return;
- }
+ } else {
 
  // Enlace predeterminado de Supabase: después de verificar, devuelve la sesión en el fragmento URL.
  (async()=>{
@@ -83,6 +82,7 @@
    if(session){showSuccess();return;}
    showExpired("No encontramos una sesión de confirmación válida. Puedes solicitar un nuevo enlace aquí abajo.");
  })();
+ }
 
  // Permite reenviar el correo de confirmación sin crear otra cuenta.
  resendForm.addEventListener("submit",async e=>{
