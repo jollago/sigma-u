@@ -16,6 +16,7 @@ create table if not exists public.posts (
   author_id uuid not null references public.profiles(id) on delete cascade,
   type text not null default 'Publicación' check (type in ('Publicación','Pregunta','Noticia','Recurso')),
   content text not null check (char_length(trim(content)) between 1 and 10000),
+  hashtags text[] not null default '{}'::text[],
   attachment_path text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
