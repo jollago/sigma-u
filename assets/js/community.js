@@ -40,7 +40,41 @@
   async function loadPosts(){
     if(!ready){posts=[];render();status("Supabase no está conectado. Verifica la configuración pública y recarga la página.");return;}
     if(!user){posts=[];render();status("Inicia sesión para consultar y compartir contenido de la comunidad.");return;}
-    const {data,error}=await client.from("posts").select("id,type,content,created_at,profiles(full_name,program,avatar_url),comments(id,content,created_at,profiles(full_name)),reactions(user_id),attachments:post_attachments(id,storage_path,file_name,mime_type,size_bytes)").order("created_at",{ascending:false}).limit(100);
+    
+const { data, error } = await client
+  .from("posts")
+  .select(`
+    id,
+    type,
+    content,
+    created_at,
+    profiles:profiles!posts_author_id_fkey (
+      full_name,
+      program,
+      avatar_url
+    ),
+    comments (
+      id,
+      content,
+      created_at,
+      profiles:profiles!comments_author_id_fkey (
+        full_name
+      )
+    ),
+    reactions (
+      user_id
+    ),
+    attachments:post_attachments!post_attachments_post_id_fkey (
+      id,
+      storage_path,
+      file_name,
+      mime_type,
+      size_bytes
+    )
+  `)
+  .order("created_at", { ascending: false })
+  .limit(100);
+
     if(error){status("No se pudieron cargar las publicaciones: "+error.message);posts=[];render();return;}
     const [{data:saves,error:saveError},{data:likes,error:likeError}]=await Promise.all([
       client.from("saved_posts").select("post_id").eq("user_id",user.id),
