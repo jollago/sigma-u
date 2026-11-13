@@ -5,7 +5,7 @@
     "Arquitectura","Ingeniería Agroindustrial","Ingeniería Ambiental","Ingeniería Civil","Ingeniería de Sistemas","Ingeniería Industrial","Ingeniería Mecánica","Tecnología en Gestión de Redes Informáticas",
     "Agroecología","Biología","Comunicación Social","Derecho","Psicología","Trabajo Social",
     "Licenciatura en Ciencias Sociales","Licenciatura en Educación Física, Recreación y Deporte","Licenciatura en Educación Infantil","Licenciatura en Educación Básica Primaria","Licenciatura en Etnoeducación e Interculturalidad","Licenciatura en Español y Humanidades","Licenciatura en Música",
-    "Seguridad y Salud en el Trabajo","Otro / Egresado"
+    "Medicina","Enfermería","Nutrición y Dietética","Seguridad y Salud en el Trabajo","Otro / Egresado"
   ];
   const campuses=["Riohacha","Maicao","Fonseca","Villanueva"];
   window.SIGMA_PROGRAMS=programs;window.SIGMA_CAMPUSES=campuses;
