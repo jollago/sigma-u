@@ -91,3 +91,53 @@
 @media(max-width:680px){
  .more-nav-menu[hidden]{display:none!important}
 }
+
+
+/* Ajuste móvil real: cinco accesos siempre visibles, sin scroll lateral */
+@media(max-width:680px){
+ .academic-nav .container{
+   display:flex!important;
+   flex-wrap:wrap!important;
+   justify-content:center!important;
+   gap:7px 14px!important;
+   overflow:visible!important;
+   padding:10px 0!important;
+ }
+ .academic-nav a{
+   white-space:normal!important;
+   text-align:center;
+   font-size:.76rem!important;
+   line-height:1.25;
+ }
+ .side-nav{
+   display:grid!important;
+   grid-template-columns:repeat(5,minmax(0,1fr))!important;
+   width:100%;
+   gap:3px!important;
+   overflow:visible!important;
+ }
+ .side-nav>.nav-link,
+ .side-nav>.more-toggle{
+   width:100%!important;
+   min-width:0!important;
+   margin:0!important;
+   padding:5px 1px!important;
+   white-space:normal!important;
+   overflow:visible!important;
+   font-size:clamp(.58rem,2.5vw,.68rem)!important;
+ }
+ .side-nav>.nav-link span:last-child,
+ .side-nav>.more-toggle span:last-child{
+   display:block;
+   max-width:100%;
+   overflow-wrap:anywhere;
+   text-align:center;
+ }
+ .side-nav>.more-toggle{display:flex!important}
+ .more-nav-menu{z-index:60}
+}
+@media(max-width:360px){
+ .side{padding-left:5px!important;padding-right:5px!important}
+ .side-nav>.nav-link,.side-nav>.more-toggle{font-size:.58rem!important}
+ .side-nav>.nav-link .nav-icon,.side-nav>.more-toggle .nav-icon{font-size:1.08rem!important}
+}
