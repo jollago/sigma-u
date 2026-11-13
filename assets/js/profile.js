@@ -4,7 +4,7 @@
  const {data:{user:u},error:userError}=await c.auth.getUser();
  if(userError||!u){location.href="login.html";return;}
  const $=id=>document.getElementById(id);
- const {data:p,error}=await c.from("profiles").select("*").eq("id",u.id).single();
+ let {data:p,error}=await c.from("profiles").select("*").eq("id",u.id).single();
  if(error){say("No se pudo cargar el perfil: "+error.message);return;}
  $("fullName").value=p.full_name||u.user_metadata?.full_name||"";
  $("program").value=p.program||u.user_metadata?.program||"";
