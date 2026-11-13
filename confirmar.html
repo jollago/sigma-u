@@ -15,11 +15,16 @@
 <section class="auth-card">
 <div class="auth-mark">σ</div>
 <p class="eyebrow">VERIFICACIÓN DE CORREO</p>
-<h1>Activa tu cuenta</h1>
-<p class="muted" id="confirmationText">Pulsa el botón para confirmar tu dirección de correo y activar tu cuenta de SIGMA-U.</p>
+<h1 id="confirmationTitle">Activa tu cuenta</h1>
+<p class="muted" id="confirmationText">Estamos comprobando el enlace de confirmación de tu correo.</p>
 <p id="authMessage" class="auth-message" role="status" aria-live="polite"></p>
-<button class="primary" id="confirmEmailButton" type="button">Confirmar correo</button>
+<button class="primary" id="confirmEmailButton" type="button" hidden>Confirmar correo</button>
 <a class="soft-btn" id="goLogin" href="login.html" hidden style="margin-top:12px;justify-content:center">Ir a iniciar sesión</a>
+<form id="resendForm" class="auth-form" hidden>
+  <label for="resendEmail">Correo electrónico usado en el registro</label>
+  <input id="resendEmail" name="email" type="email" autocomplete="email" placeholder="nombre@correo.com" required>
+  <button class="primary" id="resendButton" type="submit">Enviar nuevo enlace</button>
+</form>
 </section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -34,27 +39,65 @@
  const button=document.getElementById("confirmEmailButton");
  const message=document.getElementById("authMessage");
  const login=document.getElementById("goLogin");
+ const resendForm=document.getElementById("resendForm");
+ const title=document.getElementById("confirmationTitle");
+ const description=document.getElementById("confirmationText");
  const say=(text,ok=false)=>{message.textContent=text;message.className="auth-message "+(ok?"success":"error");};
- if(!client){say("No se pudo conectar con el servicio de autenticación. Intenta nuevamente más tarde.");button.disabled=true;return;}
- if(!tokenHash){
-   const hashParams=new URLSearchParams(location.hash.slice(1));
-   const error=hashParams.get("error_description")||hashParams.get("error");
-   if(error){say("El enlace no pudo validarse o ya fue utilizado. Solicita un nuevo correo de confirmación desde el registro.");}
-   else say("No encontramos el código de confirmación. Abre el enlace completo que llegó a tu correo.");
-   button.disabled=true;
-   document.getElementById("confirmationText").textContent="No se recibió un código de confirmación válido.";
+ const showSuccess=()=>{
+   title.textContent="¡Correo confirmado!";
+   description.textContent="Tu cuenta de SIGMA-U ya está activada. Ahora puedes iniciar sesión.";
+   say("La verificación se completó correctamente.",true);
+   button.hidden=true;resendForm.hidden=true;login.hidden=false;
+ };
+ const showExpired=(text)=>{
+   title.textContent="El enlace no está disponible";
+   description.textContent="El enlace pudo haber vencido o haber sido abierto previamente por el sistema de seguridad del correo.";
+   say(text||"Solicita un nuevo enlace e intenta abrirlo una sola vez.",false);
+   button.hidden=true;resendForm.hidden=false;login.hidden=true;
+ };
+ if(!client){say("No se pudo conectar con el servicio de autenticación. Intenta nuevamente más tarde.");return;}
+
+ // Enlace personalizado con token_hash: la verificación se hace al pulsar el botón.
+ if(tokenHash){
+   description.textContent="Pulsa el botón para confirmar tu dirección de correo y activar tu cuenta.";
+   button.hidden=false;
+   button.addEventListener("click",async()=>{
+     button.disabled=true;button.textContent="Verificando...";
+     const {error}=await client.auth.verifyOtp({token_hash:tokenHash,type});
+     if(error){button.disabled=false;button.textContent="Intentar nuevamente";showExpired("Supabase no aceptó el enlace. Puede haber vencido o ya haber sido utilizado.");return;}
+     showSuccess();
+   });
    return;
  }
- button.addEventListener("click",async()=>{
-   button.disabled=true;button.textContent="Verificando...";
-   const {error}=await client.auth.verifyOtp({token_hash:tokenHash,type});
-   if(error){
-     say("No fue posible confirmar el correo. El enlace puede haber vencido o ya se utilizó. Regresa al registro y solicita uno nuevo.");
-     button.disabled=false;button.textContent="Intentar nuevamente";
+
+ // Enlace predeterminado de Supabase: después de verificar, devuelve la sesión en el fragmento URL.
+ (async()=>{
+   const hashParams=new URLSearchParams(location.hash.slice(1));
+   const errorCode=hashParams.get("error_code");
+   const errorText=hashParams.get("error_description")||hashParams.get("error");
+   if(errorCode||errorText){
+     showExpired(errorCode==="otp_expired"?"El enlace de confirmación expiró o ya fue utilizado. Solicita uno nuevo aquí abajo.":"No fue posible validar el enlace. Solicita uno nuevo aquí abajo.");
      return;
    }
-   say("¡Correo confirmado! Tu cuenta ya está activada. Ahora puedes iniciar sesión.",true);
-   button.hidden=true;login.hidden=false;
+   const {data:{session}}=await client.auth.getSession();
+   if(session){showSuccess();return;}
+   showExpired("No encontramos una sesión de confirmación válida. Puedes solicitar un nuevo enlace aquí abajo.");
+ })();
+
+ // Permite reenviar el correo de confirmación sin crear otra cuenta.
+ resendForm.addEventListener("submit",async e=>{
+   e.preventDefault();
+   const email=document.getElementById("resendEmail").value.trim();
+   const resendButton=document.getElementById("resendButton");
+   resendButton.disabled=true;resendButton.textContent="Enviando...";
+   const {error}=await client.auth.resend({
+     type:"signup",
+     email,
+     options:{emailRedirectTo:"https://jollago.github.io/confirmar.html"}
+   });
+   resendButton.disabled=false;resendButton.textContent="Enviar nuevo enlace";
+   if(error){say("No se pudo reenviar el correo. "+error.message);return;}
+   say("Si el registro está pendiente, Supabase enviará un nuevo enlace. Revisa tu bandeja de entrada y spam.",true);
  });
 })();
 </script>
