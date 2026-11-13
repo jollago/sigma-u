@@ -195,10 +195,11 @@
       if(!confirm("¿Eliminar esta publicación y sus archivos y comentarios? Esta acción no se puede deshacer."))return;
       b.disabled=true;
       const paths=(post.attachments||[]).map(a=>a.storage_path).filter(Boolean);
-      if(paths.length){const {error:storageError}=await client.storage.from("community-files").remove(paths);if(storageError){status("No se pudieron eliminar los archivos adjuntos: "+storageError.message);b.disabled=false;return;}}
       const {error}=await client.from("posts").delete().eq("id",id).eq("author_id",user.id);
       if(error){status("No se pudo eliminar la publicación: "+error.message);b.disabled=false;return;}
-      status("Publicación eliminada.");await loadPosts();return;
+      let storageWarning="";
+      if(paths.length){const {error:storageError}=await client.storage.from("community-files").remove(paths);if(storageError)storageWarning=" La publicación se eliminó, pero algunos archivos podrían permanecer almacenados: "+storageError.message;}
+      status("Publicación eliminada."+storageWarning);await loadPosts();return;
     }else if(b.dataset.action==="delete-comment"){
       const commentId=b.dataset.commentId;
       if(!confirm("¿Eliminar tu comentario?"))return;
