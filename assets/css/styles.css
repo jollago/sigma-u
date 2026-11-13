@@ -81,3 +81,13 @@
  .side-note{display:none}
  .feed{min-width:0}
 }
+
+/* En escritorio se conservan todas las opciones visibles; en móvil se agrupan en Más */
+@media(min-width:681px){
+ .more-toggle{display:none!important}
+ .more-nav-menu[hidden]{display:block!important}
+ .more-nav-menu{margin-top:0;padding-top:0;border-top:0}
+}
+@media(max-width:680px){
+ .more-nav-menu[hidden]{display:none!important}
+}
