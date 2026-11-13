@@ -1,5 +1,11 @@
 -- SIGMA-U: ampliación de comunidad, archivos adjuntos y perfil académico
 -- Ejecutar UNA SOLA VEZ en Supabase > SQL Editor.
+-- Permite que cada usuario cree su propio perfil si ya tenía cuenta antes de instalar el trigger.
+drop policy if exists "profiles_insert_own" on public.profiles;
+create policy "profiles_insert_own" on public.profiles
+for insert to authenticated
+with check (auth.uid() = id);
+
 alter table public.profiles add column if not exists campus text;
 alter table public.profiles add column if not exists semester text;
 alter table public.profiles add column if not exists bio text;
