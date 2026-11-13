@@ -40,49 +40,75 @@
   async function loadPosts(){
     if(!ready){posts=[];render();status("Supabase no está conectado. Verifica la configuración pública y recarga la página.");return;}
     if(!user){posts=[];render();status("Inicia sesión para consultar y compartir contenido de la comunidad.");return;}
-    
-const { data, error } = await client
-  .from("posts")
-  .select(`
-    id,
-    type,
-    content,
-    created_at,
-    profiles:profiles!posts_author_id_fkey (
-      full_name,
-      program,
-      avatar_url
-    ),
-    comments (
-      id,
-      content,
-      created_at,
-      profiles:profiles!comments_author_id_fkey (
-        full_name
-      )
-    ),
-    reactions (
-      user_id
-    ),
-    attachments:post_attachments!post_attachments_post_id_fkey (
-      id,
-      storage_path,
-      file_name,
-      mime_type,
-      size_bytes
-    )
-  `)
-  .order("created_at", { ascending: false })
-  .limit(100);
 
-    if(error){status("No se pudieron cargar las publicaciones: "+error.message);posts=[];render();return;}
+    // Consultas separadas: evitan relaciones ambiguas de PostgREST entre posts y profiles.
+    const {data: basePosts,error:postsError}=await client
+      .from("posts")
+      .select("id,author_id,type,content,created_at")
+      .order("created_at",{ascending:false})
+      .limit(100);
+    if(postsError){status("No se pudieron cargar las publicaciones: "+postsError.message);posts=[];render();return;}
+
+    const postIds=(basePosts||[]).map(p=>p.id);
+    const authorIds=[...new Set((basePosts||[]).map(p=>p.author_id).filter(Boolean))];
+    let profileRows=[], commentRows=[], attachmentRows=[], reactionRows=[];
+    if(authorIds.length){
+      const {data,error}=await client.from("profiles").select("id,full_name,program,avatar_url").in("id",authorIds);
+      if(error){status("No se pudieron cargar los perfiles: "+error.message);posts=[];render();return;}
+      profileRows=data||[];
+    }
+    if(postIds.length){
+      const [commentsResult,attachmentsResult,reactionsResult]=await Promise.all([
+        client.from("comments").select("id,post_id,author_id,content,created_at").in("post_id",postIds).order("created_at",{ascending:true}),
+        client.from("post_attachments").select("id,post_id,storage_path,file_name,mime_type,size_bytes").in("post_id",postIds),
+        client.from("reactions").select("post_id,user_id").in("post_id",postIds)
+      ]);
+      if(commentsResult.error){status("No se pudieron cargar los comentarios: "+commentsResult.error.message);posts=[];render();return;}
+      if(attachmentsResult.error){status("No se pudieron cargar los archivos: "+attachmentsResult.error.message);posts=[];render();return;}
+      if(reactionsResult.error){status("No se pudieron cargar las reacciones: "+reactionsResult.error.message);posts=[];render();return;}
+      commentRows=commentsResult.data||[];
+      attachmentRows=attachmentsResult.data||[];
+      reactionRows=reactionsResult.data||[];
+    }
+    const commentAuthorIds=[...new Set(commentRows.map(c=>c.author_id).filter(Boolean))];
+    let commentProfiles=[];
+    if(commentAuthorIds.length){
+      const {data,error}=await client.from("profiles").select("id,full_name").in("id",commentAuthorIds);
+      if(error){status("No se pudieron cargar los autores de comentarios: "+error.message);posts=[];render();return;}
+      commentProfiles=data||[];
+    }
+    const profileById=new Map(profileRows.map(p=>[p.id,p]));
+    const commentProfileById=new Map(commentProfiles.map(p=>[p.id,p]));
+    const commentsByPost=new Map(), attachmentsByPost=new Map(), reactionsByPost=new Map();
+    commentRows.forEach(c=>{
+      if(!commentsByPost.has(c.post_id))commentsByPost.set(c.post_id,[]);
+      commentsByPost.get(c.post_id).push({...c,profiles:commentProfileById.get(c.author_id)||null});
+    });
+    attachmentRows.forEach(a=>{
+      if(!attachmentsByPost.has(a.post_id))attachmentsByPost.set(a.post_id,[]);
+      attachmentsByPost.get(a.post_id).push(a);
+    });
+    reactionRows.forEach(r=>{
+      if(!reactionsByPost.has(r.post_id))reactionsByPost.set(r.post_id,[]);
+      reactionsByPost.get(r.post_id).push(r);
+    });
     const [{data:saves,error:saveError},{data:likes,error:likeError}]=await Promise.all([
       client.from("saved_posts").select("post_id").eq("user_id",user.id),
       client.from("reactions").select("post_id").eq("user_id",user.id)
     ]);
-    if(saveError) console.warn(saveError); if(likeError) console.warn(likeError);
-    const saved=new Set((saves||[]).map(x=>x.post_id)), liked=new Set((likes||[]).map(x=>x.post_id));
-    posts=(data||[]).map(p=>({...p,is_saved:saved.has(p.id),my_reaction:liked.has(p.id)}));
+    if(saveError)console.warn(saveError);
+    if(likeError)console.warn(likeError);
+    const saved=new Set((saves||[]).map(x=>x.post_id));
+    const liked=new Set((likes||[]).map(x=>x.post_id));
+    posts=(basePosts||[]).map(p=>({
+      ...p,
+      profiles:profileById.get(p.author_id)||null,
+      comments:commentsByPost.get(p.id)||[],
+      attachments:attachmentsByPost.get(p.id)||[],
+      reactions:reactionsByPost.get(p.id)||[],
+      is_saved:saved.has(p.id),
+      my_reaction:liked.has(p.id)
+    }));
     render();status("Conectado · "+posts.length+" publicaciones cargadas.");
   }
   async function account(){
