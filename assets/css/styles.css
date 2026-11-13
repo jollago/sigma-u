@@ -55,3 +55,7 @@
 #profileSummary h2{margin:8px 0}
 #summaryBio{white-space:pre-wrap;margin:16px 0}
 @media(max-width:680px){.account-name{max-width:105px;font-size:.86rem}}
+
+
+/* Campo independiente de hashtags y etiquetas de publicaciones */
+.composer-hashtags{display:grid;gap:6px;margin:12px 0 10px;padding-left:52px}.composer-hashtags label{font-weight:700;font-size:.88rem;color:var(--ink)}.composer-hashtags input{width:100%}.composer-hashtags small{font-size:.78rem}.post-tags{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0}.post-hashtag{border:0;background:#eaf4ee;color:#17643b;border-radius:999px;padding:5px 10px;font:inherit;font-size:.82rem;font-weight:650;cursor:pointer}.post-hashtag:hover{background:#d9ecdf}.trend-tag{cursor:pointer}@media(max-width:600px){.composer-hashtags{padding-left:0}}
