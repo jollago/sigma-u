@@ -5,7 +5,7 @@
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const feed=$("#feedList"), form=$("#postForm"), input=$("#postText"), type=$("#postType");
   const search=$("#communitySearch"), filter=$("#feedFilter"), notice=$("#connectionNotice");
-  const filesInput=$("#postFiles"), filesLabel=$("#selectedFiles");
+  const filesInput=$("#postFiles"), filesLabel=$("#selectedFiles"), hashtagsInput=$("#postHashtags");
   let user=null, posts=[], savedOnly=false, currentView="Todos", activeTag="";
   const initials=n => (n||"Estudiante").split(/\s+/).slice(0,2).map(x=>x[0]||"").join("").toUpperCase();
   const status=t=>{if(notice) notice.textContent=t;};
@@ -18,16 +18,24 @@
     if(mime.startsWith("video/")) return '<video class="post-media-video" controls preload="metadata"><source src="'+esc(url)+'" type="'+esc(mime)+'">Tu navegador no puede reproducir este video.</video>';
     return '<a class="post-attachment" href="'+esc(url)+'" target="_blank" rel="noopener" download><span class="file-icon">'+esc((name.split(".").pop()||"FILE").slice(0,5).toUpperCase())+'</span><span><strong>'+name+'</strong><small class="post-meta">'+esc(fileSize(a.size_bytes||0))+' · Abrir o descargar</small></span><span class="attachment-download">↓</span></a>';
   }
-  function contentMarkup(value){
-    const safe=esc(value);
-    return safe.replace(new RegExp("(^|\\s)(#[\\p{L}\\p{N}_]+)","gu"),(all,space,tag)=>space+'<a href="#" class="post-hashtag" data-tag="'+tag.toLowerCase()+'">'+tag+'</a>');
+  function normalizeHashtags(value){
+    const found=String(value||"").match(/#[\p{L}\p{N}_]+|[\p{L}\p{N}_]+/gu)||[];
+    return [...new Set(found.map(t=>t.startsWith("#")?t:"#"+t).map(t=>t.toLowerCase()))].slice(0,10);
+  }
+  function postTags(p){
+    const saved=Array.isArray(p.hashtags)?p.hashtags:[];
+    const legacy=String(p.content||"").match(/#[\p{L}\p{N}_]+/gu)||[];
+    return [...new Set([...saved,...legacy].map(t=>String(t).startsWith("#")?String(t).toLowerCase():"#"+String(t).toLowerCase()))];
+  }
+  function tagsMarkup(p){
+    const tags=postTags(p);
+    return tags.length?'<div class="post-tags">'+tags.map(tag=>'<button type="button" class="post-hashtag" data-tag="'+esc(tag)+'">'+esc(tag)+'</button>').join("")+'</div>':"";
   }
   function updateTrending(){
     const host=$("#trendingTags");if(!host)return;
     const counts=new Map();
     posts.forEach(p=>{
-      const tags=String(p.content||"").match(new RegExp("#[\\p{L}\\p{N}_]+","gu"))||[];
-      new Set(tags.map(t=>t.toLowerCase())).forEach(t=>counts.set(t,(counts.get(t)||0)+1));
+      new Set(postTags(p)).forEach(t=>counts.set(t,(counts.get(t)||0)+1));
     });
     const top=[...counts.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],"es")).slice(0,8);
     host.innerHTML=top.length?top.map(([tag,count])=>'<button class="trend-tag '+(activeTag===tag?"active":"")+'" data-tag="'+esc(tag)+'"><b>'+esc(tag)+'</b><small>'+count+(count===1?" publicación":" publicaciones")+'</small></button>').join(""):'<p class="muted trend-empty">Aún no hay hashtags. Usa #Tema en tus publicaciones.</p>';
@@ -36,15 +44,15 @@
     const author=p.profiles?.full_name||"Estudiante", comments=p.comments||[], likes=p.reactions?.length||0;
     const avatar=p.profiles?.avatar_url?'<img src="'+esc(p.profiles.avatar_url)+'" alt="" class="avatar-img">':esc(initials(author));
     const attachments=(p.attachments||[]).map(attachmentMarkup).join("");
-    return '<article class="post" data-id="'+esc(p.id)+'"><div class="post-head"><div class="avatar">'+avatar+'</div><div><div class="post-author">'+esc(author)+'</div><div class="post-meta">'+esc(p.profiles?.program||"Comunidad universitaria")+' · '+esc(time(p.created_at))+'</div></div><span class="post-type">'+esc(p.type)+'</span>'+(user&&p.author_id===user.id?'<button class="action delete-action" data-action="delete-post" title="Eliminar mi publicación" aria-label="Eliminar mi publicación">Eliminar</button>':'')+'</div><div class="post-body">'+esc(p.content)+'</div>'+attachments+'<div class="post-actions"><button class="action '+(p.my_reaction?"active":"")+'" data-action="like">♡ Me gusta · '+likes+'</button><button class="action" data-action="comment">▢ Comentar · '+comments.length+'</button><button class="action '+(p.is_saved?"active":"")+'" data-action="save">'+(p.is_saved?"★ Guardado":"☆ Guardar")+'</button></div><div class="comments">'+comments.map(c=>'<div class="comment"><strong>'+esc(c.profiles?.full_name||"Estudiante")+':</strong> '+esc(c.content)+(user&&c.author_id===user.id?' <button class="action delete-action" data-action="delete-comment" data-comment-id="'+esc(c.id)+'" title="Eliminar mi comentario">Eliminar</button>':'')+'</div>').join("")+'<form class="comment-form"><input name="comment" placeholder="Escribe un comentario..." aria-label="Escribe un comentario" maxlength="3000" required><button class="soft-btn" type="submit">Enviar</button></form></div></article>';
+    return '<article class="post" data-id="'+esc(p.id)+'"><div class="post-head"><div class="avatar">'+avatar+'</div><div><div class="post-author">'+esc(author)+'</div><div class="post-meta">'+esc(p.profiles?.program||"Comunidad universitaria")+' · '+esc(time(p.created_at))+'</div></div><span class="post-type">'+esc(p.type)+'</span>'+(user&&p.author_id===user.id?'<button class="action delete-action" data-action="delete-post" title="Eliminar mi publicación" aria-label="Eliminar mi publicación">Eliminar</button>':'')+'</div><div class="post-body">'+esc(p.content)+'</div>'+tagsMarkup(p)+attachments+'<div class="post-actions"><button class="action '+(p.my_reaction?"active":"")+'" data-action="like">♡ Me gusta · '+likes+'</button><button class="action" data-action="comment">▢ Comentar · '+comments.length+'</button><button class="action '+(p.is_saved?"active":"")+'" data-action="save">'+(p.is_saved?"★ Guardado":"☆ Guardar")+'</button></div><div class="comments">'+comments.map(c=>'<div class="comment"><strong>'+esc(c.profiles?.full_name||"Estudiante")+':</strong> '+esc(c.content)+(user&&c.author_id===user.id?' <button class="action delete-action" data-action="delete-comment" data-comment-id="'+esc(c.id)+'" title="Eliminar mi comentario">Eliminar</button>':'')+'</div>').join("")+'<form class="comment-form"><input name="comment" placeholder="Escribe un comentario..." aria-label="Escribe un comentario" maxlength="3000" required><button class="soft-btn" type="submit">Enviar</button></form></div></article>';
   }
   function render(){
     if(!feed)return;
     const q=(search?.value||"").trim().toLowerCase(), f=filter?.value||"Todos", fileF=$("#fileFilter")?.value||"Todos";
-    let list=posts.filter(p=>(f==="Todos"||p.type===f)&&(!savedOnly||p.is_saved)&&(!activeTag||String(p.content||"").toLowerCase().includes(activeTag)));
+    let list=posts.filter(p=>(f==="Todos"||p.type===f)&&(!savedOnly||p.is_saved)&&(!activeTag||postTags(p).includes(activeTag)||String(p.content||"").toLowerCase().includes(activeTag)));
     list=list.filter(p=>{
       const names=(p.attachments||[]).map(a=>a.file_name).join(" ");
-      const text=[p.content,p.profiles?.full_name,p.profiles?.program,p.type,names].join(" ").toLowerCase();
+      const text=[p.content,postTags(p).join(" "),p.profiles?.full_name,p.profiles?.program,p.type,names].join(" ").toLowerCase();
       const ext=(p.attachments||[]).map(a=>(a.file_name.split(".").pop()||"").toLowerCase());
       const byFile=fileF==="Todos"||(fileF==="Imagen"&&ext.some(x=>["png","jpg","jpeg","gif","webp","svg"].includes(x)))||(fileF==="Video"&&ext.some(x=>["mp4","webm","mov","m4v"].includes(x)))||(fileF==="Documento"&&ext.some(x=>["pdf","doc","docx","ppt","pptx","xls","xlsx","txt","csv","zip"].includes(x)));
       return text.includes(q)&&byFile;
@@ -58,7 +66,7 @@
     // Consultas separadas: evitan relaciones ambiguas de PostgREST entre posts y profiles.
     const {data: basePosts,error:postsError}=await client
       .from("posts")
-      .select("id,author_id,type,content,created_at")
+      .select("id,author_id,type,content,hashtags,created_at")
       .order("created_at",{ascending:false})
       .limit(100);
     if(postsError){status("No se pudieron cargar las publicaciones: "+postsError.message);posts=[];render();return;}
@@ -153,7 +161,7 @@
   });
   form?.addEventListener("submit",async e=>{
     e.preventDefault();if(!ready||!user){location.href="login.html";return;}
-    const content=input.value.trim(), chosen=Array.from(filesInput?.files||[]);
+    const content=input.value.trim(), hashtags=normalizeHashtags(hashtagsInput?.value||""), chosen=Array.from(filesInput?.files||[]);
     if(!content&&!chosen.length)return status("Escribe algo o adjunta un archivo.");
     const submit=form.querySelector('button[type="submit"]');submit.disabled=true;submit.textContent="Publicando…";
     let postId=null, uploaded=[];
@@ -179,7 +187,8 @@
       const {data:post,error}=await client.from("posts").insert({
         author_id:currentUser.id,
         type:type.value,
-        content:content||"Archivo compartido por la comunidad."
+        content:content||"Archivo compartido por la comunidad.",
+        hashtags
       }).select("id").single();
       if(error)throw new Error("Supabase rechazó la publicación: "+error.message+" ["+(error.code||"sin código")+"]"+(error.details?" Detalles: "+error.details:"")+(error.hint?" Ayuda: "+error.hint:""));
       postId=post.id;
@@ -191,7 +200,7 @@
         const {error:rowError}=await client.from("post_attachments").insert({post_id:postId,author_id:user.id,storage_path:path,file_name:file.name,mime_type:file.type||"application/octet-stream",size_bytes:file.size});
         if(rowError)throw rowError;
       }
-      input.value="";if(filesInput)filesInput.value="";if(filesLabel)filesLabel.textContent="Puedes adjuntar hasta 6 archivos.";
+      input.value="";if(hashtagsInput)hashtagsInput.value="";if(filesInput)filesInput.value="";if(filesLabel)filesLabel.textContent="Puedes adjuntar hasta 6 archivos.";
       if(filter)filter.value="Todos";if(search)search.value="";savedOnly=false;activeTag="";setView("Todos");await loadPosts();window.scrollTo({top:0,behavior:"smooth"});
     }catch(err){
       if(uploaded.length)await client.storage.from("community-files").remove(uploaded);
