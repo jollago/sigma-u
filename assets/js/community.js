@@ -257,6 +257,10 @@
     e.preventDefault();const view=a.dataset.view;setView(view);
     if(view==="Explorar")search?.focus();
   }));
+  const moreToggle=$("#moreNavToggle"), moreMenu=$("#moreNavMenu");
+  moreToggle?.addEventListener("click",()=>{const opening=moreMenu.hidden;moreMenu.hidden=!opening;moreToggle.setAttribute("aria-expanded",String(opening));});
+  document.addEventListener("click",e=>{if(moreMenu&&!moreMenu.hidden&&!e.target.closest(".side-nav")){moreMenu.hidden=true;moreToggle?.setAttribute("aria-expanded","false");}});
+  moreMenu?.querySelectorAll("a").forEach(a=>a.addEventListener("click",()=>{moreMenu.hidden=true;moreToggle?.setAttribute("aria-expanded","false");}));
   search?.addEventListener("input",render);filter?.addEventListener("change",render);$("#fileFilter")?.addEventListener("change",render);
   $("#trendingTags")?.addEventListener("click",e=>{const b=e.target.closest("[data-tag]");if(!b)return;e.preventDefault();activeTag=b.dataset.tag.toLowerCase();savedOnly=false;if(filter)filter.value="Todos";if(search)search.value="";currentView="Explorar";document.querySelectorAll(".side-nav .nav-link").forEach(a=>a.classList.toggle("active",a.dataset.view==="Explorar"));updateTrending();render();});
   feed?.addEventListener("click",e=>{const a=e.target.closest(".post-hashtag");if(!a)return;e.preventDefault();activeTag=a.dataset.tag.toLowerCase();savedOnly=false;if(filter)filter.value="Todos";if(search)search.value="";updateTrending();render();});
