@@ -3,5 +3,5 @@
 // NUNCA uses la clave service_role en el navegador.
 window.SIGMA_SUPABASE_CONFIG = {
   url: "https://vdrosxnfafwkuuniipgf.supabase.co",
-  anonKey: "vdrosxnfafwkuuniipgf"
+  anonKey: "sb_publishable_X_y_knZS-cW64IoLbFaC2g_lKYcP2J-"
 };
