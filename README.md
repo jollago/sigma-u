@@ -14,7 +14,8 @@ SIGMA-U es un prototipo de red social universitaria orientado a reunir publicaci
 ## Estructura principal
 
 - `index.html`: presentación del proyecto.
-- `comunidad.html`: feed de la comunidad.
+- `comunidad.html`: feed personalizado por programa académico.
+- `completar-perfil.html`: formulario obligatorio para completar datos académicos.
 - `login.html`, `registro.html`, `recuperar.html`: autenticación.
 - `perfil.html`: edición del perfil.
 - `problema.html`: contexto, diagnóstico inicial, pregunta y objetivos.
@@ -35,6 +36,7 @@ SIGMA-U es un prototipo de red social universitaria orientado a reunir publicaci
    - `supabase/schema.sql`
    - `supabase/community_upgrade.sql`
    - `supabase/roles_gallery_upgrade.sql`
+   - `supabase/program_targeted_feed.sql`
 3. Los scripts crean las tablas, relaciones, políticas RLS, bucket de adjuntos, roles y galería. Los scripts de ampliación deben ejecutarse después del esquema inicial.
 
 ### 2. Configurar el cliente web
@@ -73,6 +75,8 @@ La asignación debe hacerse únicamente a cuentas autorizadas. Los usuarios pued
 | Función | Usuario | Administrador |
 |---|---:|---:|
 | Consultar la comunidad | Sí | Sí |
+| Recibir primero publicaciones de su programa | Sí | Sí |
+| Dirigir una publicación a un programa específico | Sí | Sí |
 | Crear publicaciones y comentarios | Sí | Sí |
 | Reaccionar y guardar publicaciones | Sí | Sí |
 | Eliminar sus propias publicaciones y comentarios | Sí | Sí |
@@ -123,7 +127,9 @@ Abre [http://localhost:8000](http://localhost:8000). Configura las URL de redire
 - Búsqueda y filtros por texto, tipo y archivo.
 - Comentarios, reacciones, guardados y hashtags.
 - Moderación de publicaciones y comentarios por administradores.
-- Galería de fotografías con carga y eliminación reservadas al administrador.
+- Galería con identidad visual, diagramas y recursos del proyecto, además de fotografías dinámicas con carga y eliminación reservadas al administrador.
+- Registro obligatorio con nombre, programa académico, sede, correo y contraseña.
+- Feed que prioriza publicaciones dirigidas al programa del usuario, luego las generales y finalmente las dirigidas a otros programas.
 - Contenido académico del proyecto: problema, innovación, sistema, método científico e Industria 4.0.
 
 ## Alcance y validación académica
