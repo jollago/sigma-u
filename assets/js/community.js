@@ -6,7 +6,7 @@
   const feed=$("#feedList"), form=$("#postForm"), input=$("#postText"), type=$("#postType");
   const search=$("#communitySearch"), filter=$("#feedFilter"), notice=$("#connectionNotice");
   const filesInput=$("#postFiles"), filesLabel=$("#selectedFiles"), hashtagsInput=$("#postHashtags");
-  let user=null, userIsAdmin=false, posts=[], savedOnly=false, currentView="Todos", activeTag="";
+  let user=null, userIsAdmin=false, userProgram="", posts=[], savedOnly=false, currentView="Todos", activeTag="";
   const initials=n => (n||"Estudiante").split(/\s+/).slice(0,2).map(x=>x[0]||"").join("").toUpperCase();
   const status=t=>{if(notice) notice.textContent=t;};
   const time=s=>{const d=new Date(s);return isNaN(d)?"":d.toLocaleString("es-CO",{dateStyle:"medium",timeStyle:"short"});};
@@ -57,6 +57,7 @@
       const byFile=fileF==="Todos"||(fileF==="Imagen"&&ext.some(x=>["png","jpg","jpeg","gif","webp","svg"].includes(x)))||(fileF==="Video"&&ext.some(x=>["mp4","webm","mov","m4v"].includes(x)))||(fileF==="Documento"&&ext.some(x=>["pdf","doc","docx","ppt","pptx","xls","xlsx","txt","csv","zip"].includes(x)));
       return text.includes(q)&&byFile;
     });
+    list.sort((a,b)=>{const rank=p=>p.target_program===userProgram&&userProgram?0:!p.target_program?1:2;return rank(a)-rank(b)||new Date(b.created_at)-new Date(a.created_at);});
     feed.innerHTML=list.length?list.map(card).join(""):'<div class="empty panel">No encontramos contenido. Cambia los filtros o comparte el primer aporte.</div>';
   }
   async function loadPosts(){
@@ -66,7 +67,7 @@
     // Consultas separadas: evitan relaciones ambiguas de PostgREST entre posts y profiles.
     const {data: basePosts,error:postsError}=await client
       .from("posts")
-      .select("id,author_id,type,content,hashtags,created_at")
+      .select("id,author_id,type,content,hashtags,target_program,created_at")
       .order("created_at",{ascending:false})
       .limit(100);
     if(postsError){status("No se pudieron cargar las publicaciones: "+postsError.message);posts=[];render();return;}
@@ -139,7 +140,10 @@
     if(user){
       const {data:roleRow}=await client.from("user_roles").select("role").eq("user_id",user.id).maybeSingle();
       userIsAdmin=roleRow?.role==="admin";
-      const {data:p}=await client.from("profiles").select("full_name,program,avatar_url").eq("id",user.id).maybeSingle();
+      const {data:p}=await client.from("profiles").select("full_name,program,campus,avatar_url").eq("id",user.id).maybeSingle();
+      if(!p?.program||!p?.campus){location.href="completar-perfil.html";return;}
+      userProgram=p.program;
+      const audience=$("#postTargetProgram");if(audience){audience.innerHTML='<option value="">Toda la universidad</option>'+(window.SIGMA_PROGRAMS||[]).map(program=>'<option value="'+esc(program)+'">'+esc(program)+'</option>').join("");}
       const name=p?.full_name||user.user_metadata?.full_name||"Mi cuenta";
       $("#profileName").textContent=name;$("#profileProgram").textContent=p?.program||"Estudiante SIGMA-U";
       $("#profileAvatar").innerHTML=p?.avatar_url?'<img class="avatar-img" src="'+esc(p.avatar_url)+'" alt="">':esc(initials(name));
@@ -163,7 +167,7 @@
   });
   form?.addEventListener("submit",async e=>{
     e.preventDefault();if(!ready||!user){location.href="login.html";return;}
-    const content=input.value.trim(), hashtags=normalizeHashtags(hashtagsInput?.value||""), chosen=Array.from(filesInput?.files||[]);
+    const content=input.value.trim(), hashtags=normalizeHashtags(hashtagsInput?.value||""), chosen=Array.from(filesInput?.files||[]), targetProgram=$("#postTargetProgram")?.value||null;
     if(!content&&!chosen.length)return status("Escribe algo o adjunta un archivo.");
     const submit=form.querySelector('button[type="submit"]');submit.disabled=true;submit.textContent="Publicando…";
     let postId=null, uploaded=[];
@@ -190,7 +194,8 @@
         author_id:currentUser.id,
         type:type.value,
         content:content||"Archivo compartido por la comunidad.",
-        hashtags
+        hashtags,
+        target_program:targetProgram
       }).select("id").single();
       if(error)throw new Error("Supabase rechazó la publicación: "+error.message+" ["+(error.code||"sin código")+"]"+(error.details?" Detalles: "+error.details:"")+(error.hint?" Ayuda: "+error.hint:""));
       postId=post.id;
