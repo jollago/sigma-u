@@ -15,25 +15,31 @@
   let isAdmin = false;
   const say = message => { if (status) status.textContent = message; };
   const publicUrl = path => client.storage.from("sigma-gallery").getPublicUrl(path).data.publicUrl;
+  const featuredItems = [
+    {local:true,src:"assets/img/sigma-u-logo.svg",title:"Identidad visual de SIGMA-U",description:"Logo y línea gráfica del proyecto universitario."},
+    {local:true,src:"assets/img/sigma-mark.svg",title:"Símbolo de SIGMA-U",description:"Marca gráfica utilizada en el sitio y sus accesos."},
+    {local:true,src:"assets/img/sigma-community.svg",title:"La comunidad en un solo espacio",description:"Ilustración conceptual del feed, navegación y participación."},
+    {local:true,src:"assets/img/system-flow.svg",title:"Arquitectura del sistema",description:"Representación de entradas, procesos y salidas del prototipo."}
+  ];
 
   function render(items) {
     if (!grid) return;
     grid.innerHTML = items.length ? items.map(item => {
-      const url = publicUrl(item.storage_path);
+      const url = item.local ? item.src : publicUrl(item.storage_path);
       return '<article class="gallery-item"><a href="' + esc(url) + '" target="_blank" rel="noopener"><img src="' + esc(url) + '" alt="' + esc(item.title || "Fotografía de SIGMA-U") + '" loading="lazy"></a><div class="gallery-item-info"><h2>' + esc(item.title || "Registro de la comunidad") + '</h2>' +
         (item.description ? '<p>' + esc(item.description) + '</p>' : '') +
-        '<small>' + new Date(item.created_at).toLocaleDateString("es-CO",{dateStyle:"medium"}) + '</small>' +
-        (isAdmin ? '<button class="action delete-action" type="button" data-delete="' + esc(item.id) + '" data-path="' + esc(item.storage_path) + '">Eliminar fotografía</button>' : '') +
+        (item.created_at ? '<small>' + new Date(item.created_at).toLocaleDateString("es-CO",{dateStyle:"medium"}) + '</small>' : '') +
+        (isAdmin && !item.local ? '<button class="action delete-action" type="button" data-delete="' + esc(item.id) + '" data-path="' + esc(item.storage_path) + '">Eliminar fotografía</button>' : '') +
         '</div></article>';
     }).join("") : '<div class="content-card"><p class="muted">Todavía no hay fotografías. El administrador puede agregar los primeros registros.</p></div>';
   }
 
   async function loadGallery() {
-    if (!ready) { say("No se pudo conectar con Supabase. Revisa la configuración y recarga."); return; }
+    if (!ready) { render(featuredItems); say("Mostrando material visual del proyecto. La galería dinámica requiere conexión con Supabase."); return; }
     const {data,error} = await client.from("gallery_items").select("id,title,description,storage_path,created_at").order("created_at",{ascending:false});
-    if (error) { say("No se pudo cargar la galería: " + error.message); return; }
-    render(data || []);
-    say((data || []).length + " fotografía(s) en la galería.");
+    if (error) { render(featuredItems); say("Se muestra la galería base. No se pudieron cargar las fotografías nuevas: " + error.message); return; }
+    render([...(data || []),...featuredItems]);
+    say((data || []).length + " fotografía(s) agregadas por la comunidad y " + featuredItems.length + " recursos del proyecto.");
   }
 
   async function init() {
