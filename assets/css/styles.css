@@ -120,3 +120,6 @@
 .content-card li{margin:6px 0}
 @media(max-width:900px){.gallery-dynamic{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.gallery-dynamic{grid-template-columns:1fr}.gallery-item img{height:240px}.gallery-form .primary{width:100%}}
+
+/* Feed personalizado por programa */
+.post-audience{display:inline-flex;align-items:center;margin-left:6px;background:#eef4ff;color:#355b91;border-radius:20px;padding:5px 9px;font-size:.72rem;font-weight:700;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.composer-tools #postTargetProgram{max-width:210px}.gallery-dynamic{grid-template-columns:repeat(3,minmax(0,1fr))}.gallery-item{min-width:0}@media(max-width:900px){.gallery-dynamic{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:600px){.gallery-dynamic{grid-template-columns:1fr}.composer-tools #postTargetProgram{max-width:100%;width:100%}}
