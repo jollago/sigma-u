@@ -46,7 +46,6 @@
     }
     if (isAdmin && adminPanel) adminPanel.hidden = false;
     await loadGallery();
-    client.auth.onAuthStateChange(() => location.reload());
   }
 
   form?.addEventListener("submit", async event => {
