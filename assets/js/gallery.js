@@ -43,7 +43,7 @@
   }
 
   async function init() {
-    if (!ready) { say("Supabase no está conectado. Verifica assets/js/supabase-config.js."); return; }
+    if (!ready) { render(featuredItems); say("Mostrando recursos visuales del proyecto. La carga de fotografías nuevas requiere conexión con Supabase."); return; }
     const {data} = await client.auth.getSession();
     user = data.session?.user || null;
     if (user) {
