@@ -135,8 +135,10 @@
   }
   async function account(){
     if(!ready){$("#accountActions").innerHTML='<a class="soft-btn" href="login.html">Iniciar sesión</a><a class="primary" href="registro.html">Crear cuenta</a>';return;}
-    const {data}=await client.auth.getSession(); user=data.session?.user||null;
+    const {data}=await client.auth.getSession(); user=data.session?.user||null; userIsAdmin=false;
     if(user){
+      const {data:roleRow}=await client.from("user_roles").select("role").eq("user_id",user.id).maybeSingle();
+      userIsAdmin=roleRow?.role==="admin";
       const {data:p}=await client.from("profiles").select("full_name,program,avatar_url").eq("id",user.id).maybeSingle();
       const name=p?.full_name||user.user_metadata?.full_name||"Mi cuenta";
       $("#profileName").textContent=name;$("#profileProgram").textContent=p?.program||"Estudiante SIGMA-U";
