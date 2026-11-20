@@ -6,7 +6,7 @@
   const feed=$("#feedList"), form=$("#postForm"), input=$("#postText"), type=$("#postType");
   const search=$("#communitySearch"), filter=$("#feedFilter"), notice=$("#connectionNotice");
   const filesInput=$("#postFiles"), filesLabel=$("#selectedFiles"), hashtagsInput=$("#postHashtags");
-  let user=null, posts=[], savedOnly=false, currentView="Todos", activeTag="";
+  let user=null, userIsAdmin=false, posts=[], savedOnly=false, currentView="Todos", activeTag="";
   const initials=n => (n||"Estudiante").split(/\s+/).slice(0,2).map(x=>x[0]||"").join("").toUpperCase();
   const status=t=>{if(notice) notice.textContent=t;};
   const time=s=>{const d=new Date(s);return isNaN(d)?"":d.toLocaleString("es-CO",{dateStyle:"medium",timeStyle:"short"});};
@@ -44,7 +44,7 @@
     const author=p.profiles?.full_name||"Estudiante", comments=p.comments||[], likes=p.reactions?.length||0;
     const avatar=p.profiles?.avatar_url?'<img src="'+esc(p.profiles.avatar_url)+'" alt="" class="avatar-img">':esc(initials(author));
     const attachments=(p.attachments||[]).map(attachmentMarkup).join("");
-    return '<article class="post" data-id="'+esc(p.id)+'"><div class="post-head"><div class="avatar">'+avatar+'</div><div><div class="post-author">'+esc(author)+'</div><div class="post-meta">'+esc(p.profiles?.program||"Comunidad universitaria")+' · '+esc(time(p.created_at))+'</div></div><span class="post-type">'+esc(p.type)+'</span>'+(user&&p.author_id===user.id?'<button class="action delete-action" data-action="delete-post" title="Eliminar mi publicación" aria-label="Eliminar mi publicación">Eliminar</button>':'')+'</div><div class="post-body">'+esc(p.content)+'</div>'+tagsMarkup(p)+attachments+'<div class="post-actions"><button class="action '+(p.my_reaction?"active":"")+'" data-action="like">♡ Me gusta · '+likes+'</button><button class="action" data-action="comment">▢ Comentar · '+comments.length+'</button><button class="action '+(p.is_saved?"active":"")+'" data-action="save">'+(p.is_saved?"★ Guardado":"☆ Guardar")+'</button></div><div class="comments">'+comments.map(c=>'<div class="comment"><strong>'+esc(c.profiles?.full_name||"Estudiante")+':</strong> '+esc(c.content)+(user&&c.author_id===user.id?' <button class="action delete-action" data-action="delete-comment" data-comment-id="'+esc(c.id)+'" title="Eliminar mi comentario">Eliminar</button>':'')+'</div>').join("")+'<form class="comment-form"><input name="comment" placeholder="Escribe un comentario..." aria-label="Escribe un comentario" maxlength="3000" required><button class="soft-btn" type="submit">Enviar</button></form></div></article>';
+    return '<article class="post" data-id="'+esc(p.id)+'"><div class="post-head"><div class="avatar">'+avatar+'</div><div><div class="post-author">'+esc(author)+'</div><div class="post-meta">'+esc(p.profiles?.program||"Comunidad universitaria")+' · '+esc(time(p.created_at))+'</div></div><span class="post-type">'+esc(p.type)+'</span>'+(user&&(userIsAdmin||p.author_id===user.id)?'<button class="action delete-action" data-action="delete-post" title="Eliminar publicación" aria-label="Eliminar publicación">Eliminar</button>':'')+'</div><div class="post-body">'+esc(p.content)+'</div>'+tagsMarkup(p)+attachments+'<div class="post-actions"><button class="action '+(p.my_reaction?"active":"")+'" data-action="like">♡ Me gusta · '+likes+'</button><button class="action" data-action="comment">▢ Comentar · '+comments.length+'</button><button class="action '+(p.is_saved?"active":"")+'" data-action="save">'+(p.is_saved?"★ Guardado":"☆ Guardar")+'</button></div><div class="comments">'+comments.map(c=>'<div class="comment"><strong>'+esc(c.profiles?.full_name||"Estudiante")+':</strong> '+esc(c.content)+(user&&(userIsAdmin||c.author_id===user.id)?' <button class="action delete-action" data-action="delete-comment" data-comment-id="'+esc(c.id)+'" title="Eliminar comentario">Eliminar</button>':'')+'</div>').join("")+'<form class="comment-form"><input name="comment" placeholder="Escribe un comentario..." aria-label="Escribe un comentario" maxlength="3000" required><button class="soft-btn" type="submit">Enviar</button></form></div></article>';
   }
   function render(){
     if(!feed)return;
@@ -214,20 +214,20 @@
     const id=b.closest("[data-id]").dataset.id;let result;
     if(b.dataset.action==="delete-post"){
       const post=posts.find(p=>p.id===id);
-      if(!post||post.author_id!==user.id){status("Solo puedes eliminar tus propias publicaciones.");return;}
+      if(!post||(post.author_id!==user.id&&!userIsAdmin)){status("No tienes permisos para eliminar esta publicación.");return;}
       if(!confirm("¿Eliminar esta publicación y sus archivos y comentarios? Esta acción no se puede deshacer."))return;
       b.disabled=true;
       const paths=(post.attachments||[]).map(a=>a.storage_path).filter(Boolean);
-      const {error}=await client.from("posts").delete().eq("id",id).eq("author_id",user.id);
+      const {error}=await client.from("posts").delete().eq("id",id);
       if(error){status("No se pudo eliminar la publicación: "+error.message);b.disabled=false;return;}
       let storageWarning="";
       if(paths.length){const {error:storageError}=await client.storage.from("community-files").remove(paths);if(storageError)storageWarning=" La publicación se eliminó, pero algunos archivos podrían permanecer almacenados: "+storageError.message;}
       status("Publicación eliminada."+storageWarning);await loadPosts();return;
     }else if(b.dataset.action==="delete-comment"){
       const commentId=b.dataset.commentId;
-      if(!confirm("¿Eliminar tu comentario?"))return;
+      if(!confirm(userIsAdmin?"¿Eliminar este comentario?":"¿Eliminar tu comentario?"))return;
       b.disabled=true;
-      const {error}=await client.from("comments").delete().eq("id",commentId).eq("author_id",user.id);
+      const {error}=await client.from("comments").delete().eq("id",commentId);
       if(error){status("No se pudo eliminar el comentario: "+error.message);b.disabled=false;return;}
       status("Comentario eliminado.");await loadPosts();return;
     }else if(b.dataset.action==="like"){
