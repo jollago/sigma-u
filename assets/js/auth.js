@@ -13,7 +13,7 @@
   if(!name||!program||!campus)return say("Completa tu nombre, programa académico y sede para continuar.");if(password!==confirm)return say("Las contraseñas no coinciden.");if(password.length<8)return say("La contraseña debe tener al menos 8 caracteres.");
   if(submit){submit.disabled=true;submit.textContent="Creando cuenta…";}
   try{
-   const {data,error}=await client.auth.signUp({email,password,options:{emailRedirectTo:"https://jollago.github.io/confirmar.html",data:{full_name:name,program,campus}}});
+   const {data,error}=await client.auth.signUp({email,password,options:{emailRedirectTo:"https://jollago.github.io/sigma-u/confirmar.html",data:{full_name:name,program,campus}}});
    if(error){
     const detail=(error.message||"").toLowerCase();
     if(error.status===429||detail.includes("rate limit")||detail.includes("rate_limit")||detail.includes("too many requests")){
