@@ -10,7 +10,7 @@
  if(!client){say("Falta configurar Supabase. Revisa assets/js/supabase-config.js.");return;}
  document.getElementById("registerForm")?.addEventListener("submit",async e=>{
   e.preventDefault();const f=e.currentTarget,submit=f.querySelector('button[type="submit"]'),name=f.elements.fullName.value.trim(),program=f.elements.program.value,campus=f.elements.campus.value,email=f.elements.email.value.trim(),password=f.elements.password.value,confirm=f.elements.confirmPassword.value;
-  if(password!==confirm)return say("Las contraseñas no coinciden.");if(password.length<8)return say("La contraseña debe tener al menos 8 caracteres.");
+  if(!name||!program||!campus)return say("Completa tu nombre, programa académico y sede para continuar.");if(password!==confirm)return say("Las contraseñas no coinciden.");if(password.length<8)return say("La contraseña debe tener al menos 8 caracteres.");
   if(submit){submit.disabled=true;submit.textContent="Creando cuenta…";}
   try{
    const {data,error}=await client.auth.signUp({email,password,options:{emailRedirectTo:"https://jollago.github.io/confirmar.html",data:{full_name:name,program,campus}}});
@@ -28,7 +28,7 @@
  document.getElementById("googleAuthButton")?.addEventListener("click",async e=>{
   const button=e.currentTarget;button.disabled=true;button.textContent="Conectando con Google…";
   try{
-   const {error}=await client.auth.signInWithOAuth({provider:"google",options:{redirectTo:"https://jollago.github.io/index.html",queryParams:{prompt:"select_account"}}});
+   const {error}=await client.auth.signInWithOAuth({provider:"google",options:{redirectTo:"https://jollago.github.io/sigma-u/comunidad.html",queryParams:{prompt:"select_account"}}});
    if(error){say("No se pudo iniciar con Google: "+error.message);button.disabled=false;button.innerHTML='<span class="google-g" aria-hidden="true">G</span>Continuar con Google';}
   }catch(error){say("No se pudo conectar con Google. Inténtalo nuevamente.");button.disabled=false;button.innerHTML='<span class="google-g" aria-hidden="true">G</span>Continuar con Google';}
  });
