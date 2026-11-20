@@ -1,4 +1,29 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Recursos visuales y capturas conceptuales de SIGMA-U."><title>Galería multimedia | SIGMA-U</title><link rel="icon" href="assets/img/sigma-mark.svg"><link rel="stylesheet" href="assets/css/styles.css"></head><body><header class="topbar"><div class="container topbar-inner"><a class="brand" href="index.html"><img src="assets/img/sigma-mark.svg" width="34" height="34" alt=""><span>SIGMA-U</span></a><div class="top-actions"><a class="soft-btn" href="comunidad.html">Entrar a la comunidad ↗</a></div></div></header><nav class="academic-nav"><div class="container"><a href="index.html" >Inicio</a><a href="comunidad.html" >Comunidad</a><a href="problema.html" >Problema</a><a href="innovacion.html" >Innovación</a><a href="sistema.html" >Sistema</a><a href="multimedia.html" aria-current=page>Galería</a><a href="metodo-cientifico.html" >Método científico</a><a href="industria40.html" >Industria 4.0</a></div></nav>
-<section class="page-head"><div class="container"><div class="eyebrow">04 · Galería</div><h1>La idea en imágenes</h1><p>Recursos gráficos propios que representan el flujo de información y la experiencia de la comunidad.</p></div></section>
-<section class="content"><div class="container"><div class="gallery-grid"><div class="content-card"><img src="assets/img/system-flow.svg" alt="Diagrama del sistema"><h2>Flujo del sistema</h2><p class="muted">Entradas, procesos y salidas de la plataforma.</p></div><div class="content-card"><img src="assets/img/sigma-mark.svg" alt="Identidad gráfica de Sigma-U" style="max-height:210px;object-fit:contain;padding:30px"><h2>Identidad SIGMA-U</h2><p class="muted">Símbolo visual de la comunidad.</p></div></div><div class="callout">Para la presentación final, agrega capturas reales de la comunidad funcionando y fotografías autorizadas de las pruebas o del equipo de trabajo. No se incluyen imágenes de pruebas que todavía no se han realizado.</div></div></section>
-<footer class="footer"><div class="container">SIGMA-U · Conecta. Comparte. Aprende. <span style="float:right">© <span id="year"></span> Proyecto académico</span></div></footer><script src="assets/js/main.js"></script></body></html>
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Galería de fotografías y registros visuales de SIGMA-U.">
+<title>Galería multimedia | SIGMA-U</title>
+<link rel="icon" href="assets/img/sigma-mark.svg"><link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+<header class="topbar"><div class="container topbar-inner"><a class="brand" href="index.html"><img src="assets/img/sigma-mark.svg" width="34" height="34" alt=""><span>SIGMA-U</span></a><div class="top-actions"><a class="soft-btn" href="comunidad.html">Entrar a la comunidad ↗</a></div></div></header>
+<nav class="academic-nav"><div class="container"><a href="index.html">Inicio</a><a href="comunidad.html">Comunidad</a><a href="problema.html">Problema</a><a href="innovacion.html">Innovación</a><a href="sistema.html">Sistema</a><a href="multimedia.html" aria-current="page">Galería</a><a href="metodo-cientifico.html">Método científico</a><a href="industria40.html">Industria 4.0</a></div></nav>
+<section class="page-head"><div class="container"><div class="eyebrow">04 · Registro visual</div><h1>Galería de SIGMA-U</h1><p>Un espacio para reunir fotografías del desarrollo del proyecto, capturas de la plataforma, actividades y evidencias visuales autorizadas.</p></div></section>
+<section class="content"><div class="container">
+<section id="galleryAdmin" class="content-card gallery-admin" hidden>
+<h2>Administrar galería</h2><p class="muted">Este panel solo está disponible para la cuenta administradora. Carga imágenes JPG, PNG, WEBP o GIF de hasta 10 MB.</p>
+<form id="galleryUploadForm" class="gallery-form">
+<label for="galleryTitle">Título de la fotografía</label><input id="galleryTitle" class="select" type="text" maxlength="120" placeholder="Ej. Prueba de navegación">
+<label for="galleryDescription">Descripción (opcional)</label><textarea id="galleryDescription" class="select" rows="3" maxlength="500" placeholder="Describe brevemente qué muestra la imagen."></textarea>
+<label for="galleryFile">Seleccionar imagen</label><input id="galleryFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif" required>
+<button id="gallerySubmit" class="primary" type="submit">Subir fotografía</button>
+</form>
+</section>
+<p id="galleryStatus" class="notice" role="status">Conectando con la galería…</p>
+<div id="galleryGrid" class="gallery-grid gallery-dynamic" aria-live="polite"></div>
+<div class="callout"><b>Uso responsable:</b> publica únicamente fotografías propias o autorizadas. Evita incluir información personal, documentos privados o imágenes de personas sin su consentimiento.</div>
+</div></section>
+<footer class="footer"><div class="container">SIGMA-U · Conecta. Comparte. Aprende. <span style="float:right">© <span id="year"></span> Proyecto académico</span></div></footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="assets/js/supabase-config.js"></script><script src="assets/js/supabase-client.js"></script><script src="assets/js/gallery.js"></script><script src="assets/js/main.js"></script>
+</body></html>
